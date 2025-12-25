@@ -3,6 +3,7 @@
 import Link from "next/link";
 import Image from "next/image";
 import { Product } from "@/types/product";
+import AddToCartButton from "./AddToCartButton";
 
 interface ProductCardProps {
   product: Product;
@@ -54,11 +55,7 @@ export default function ProductCard({ product, index }: ProductCardProps) {
         </p>
       </div>
       
-      <button 
-        className="w-full bg-apple-blue text-white py-2 rounded-full hover:bg-blue-600 transition-colors text-sm font-medium"
-      >
-        Add to Cart
-      </button>
+      <AddToCartButton product={product} className="w-full text-sm font-medium" />
     </div>
   );
 }

@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import "./globals.css";
 import { CartProvider } from "@/contexts/CartContext";
+import { SearchProvider } from "@/contexts/SearchContext";
 
 export const metadata: Metadata = {
   title: "Kilolook Store",
@@ -16,10 +17,11 @@ export default function RootLayout({
     <html lang="en">
       <body className="antialiased">
         <CartProvider>
-          {children}
+          <SearchProvider>
+            {children}
+          </SearchProvider>
         </CartProvider>
       </body>
     </html>
   );
 }
-

@@ -1,9 +1,10 @@
 "use client";
 
 import Link from "next/link";
-import { Menu, Search, User, ShoppingCart } from "lucide-react";
+import { Menu, User, ShoppingCart } from "lucide-react";
 import { usePathname } from "next/navigation";
 import { useCart } from "@/contexts/CartContext";
+import SearchBar from "./SearchBar";
 
 export default function Header() {
   const pathname = usePathname();
@@ -60,9 +61,7 @@ export default function Header() {
 
           {/* Right Icons */}
           <div className="flex items-center space-x-4">
-            <button className="p-2 text-gray-600 hover:text-apple-gray-900 transition-colors">
-              <Search className="h-5 w-5" />
-            </button>
+            <SearchBar />
             <button className="p-2 text-gray-600 hover:text-apple-gray-900 transition-colors">
               <User className="h-5 w-5" />
             </button>

@@ -7,14 +7,13 @@ import { Product } from "@/types/product";
 import ProductCard from "@/components/ProductCard";
 import Header from "@/components/Header";
 
-async function getFeaturedProducts(): Promise<Product[]> {
+async function getAllProducts(): Promise<Product[]> {
   try {
     const { data, error } = await supabase
       .from("products")
       .select("*")
       .eq("is_published", true)
-      .order("created_at", { ascending: false })
-      .limit(6);
+      .order("created_at", { ascending: false });
 
     if (error) {
       console.error("Error fetching products:", error);
@@ -28,45 +27,69 @@ async function getFeaturedProducts(): Promise<Product[]> {
   }
 }
 
-export default async function Home() {
-  const products = await getFeaturedProducts();
+export default async function Home({
+  searchParams,
+}: {
+  searchParams: { search?: string };
+}) {
+  const allProducts = await getAllProducts();
+  const searchQuery = searchParams.search || "";
+  
+  // Filter products based on search query (case-insensitive)
+  const filteredProducts = searchQuery
+    ? allProducts.filter((product) =>
+        product.title.toLowerCase().includes(searchQuery.toLowerCase())
+      )
+    : allProducts.slice(0, 6); // Show first 6 as featured if no search
   return (
     <div className="min-h-screen bg-white">
       <Header />
 
       {/* Hero Section */}
-      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-24 text-center">
-        <h1 className="text-5xl md:text-7xl font-semibold text-apple-gray-900 mb-6">
-          Discover Your Style
-        </h1>
-        <p className="text-xl text-gray-600 mb-10 max-w-2xl mx-auto">
-          Curated products designed for your lifestyle
-        </p>
-        <Link
-          href="/products"
-          className="inline-block bg-apple-blue text-white px-8 py-3 rounded-full hover:bg-blue-600 transition-colors text-sm font-medium"
-        >
-          Shop Now
-        </Link>
-      </section>
+      {!searchQuery && (
+        <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-24 text-center">
+          <h1 className="text-5xl md:text-7xl font-semibold text-apple-gray-900 mb-6">
+            Discover Your Style
+          </h1>
+          <p className="text-xl text-gray-600 mb-10 max-w-2xl mx-auto">
+            Curated products designed for your lifestyle
+          </p>
+          <Link
+            href="/products"
+            className="inline-block bg-apple-blue text-white px-8 py-3 rounded-full hover:bg-blue-600 transition-colors text-sm font-medium"
+          >
+            Shop Now
+          </Link>
+        </section>
+      )}
 
-      {/* Featured Products */}
+      {/* Products Section */}
       <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
         <h2 className="text-3xl md:text-4xl font-semibold text-apple-gray-900 mb-12 text-center">
-          Featured Products
+          {searchQuery ? `Search Results for "${searchQuery}"` : "Featured Products"}
         </h2>
         
-        {products.length > 0 ? (
+        {filteredProducts.length > 0 ? (
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            {products.map((product, index) => (
+            {filteredProducts.map((product, index) => (
               <ProductCard key={product.id || product.slug} product={product} index={index} />
             ))}
           </div>
         ) : (
           <div className="text-center py-20">
-            <p className="text-gray-500">
-              No products available at the moment.
+            <p className="text-gray-500 mb-4">
+              {searchQuery 
+                ? `No products found matching "${searchQuery}"`
+                : "No products available at the moment."}
             </p>
+            {searchQuery && (
+              <Link
+                href="/"
+                className="text-apple-blue hover:underline"
+              >
+                Clear search and view all products
+              </Link>
+            )}
           </div>
         )}
       </section>

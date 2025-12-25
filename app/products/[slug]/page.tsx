@@ -3,7 +3,7 @@ export const revalidate = 0;
 
 import { notFound } from "next/navigation";
 import Link from "next/link";
-import { ArrowLeft, ExternalLink } from "lucide-react";
+import { ArrowLeft } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import { Product } from "@/types/product";
 import Header from "@/components/Header";
@@ -115,6 +115,11 @@ export default async function ProductDetailPage({
               )}
             </div>
 
+            {/* Shipping Info */}
+            <div className="text-green-600 font-bold">
+              🚚 Estimated Delivery: 7 - 10 days
+            </div>
+
             {/* Description */}
             {product.description && (
               <div className="space-y-3">
@@ -131,17 +136,12 @@ export default async function ProductDetailPage({
             <div className="space-y-3 pt-6">
               <AddToCartButton product={product} />
 
-              {product.source_url && (
-                <a
-                  href={product.source_url}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="w-full flex items-center justify-center gap-2 border border-gray-300 text-apple-gray-900 py-3 rounded-full hover:bg-gray-50 transition-colors font-medium text-sm"
-                >
-                  <ExternalLink className="h-4 w-4" />
-                  View Source
-                </a>
-              )}
+              <Link
+                href="/checkout"
+                className="w-full flex items-center justify-center gap-2 border border-gray-300 text-apple-gray-900 py-3 rounded-full hover:bg-gray-50 transition-colors font-medium text-sm"
+              >
+                Checkout
+              </Link>
             </div>
 
             {/* Product Info Table */}
