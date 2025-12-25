@@ -103,3 +103,5 @@ const googleSheetsUrl = "https://script.google.com/macros/s/YOUR_SCRIPT_ID/exec"
 - Make sure you've authorized the script with the necessary permissions
 - Verify that the Web App is deployed (not just saved)
 
+
+

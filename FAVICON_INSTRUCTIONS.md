@@ -84,3 +84,5 @@ Since I don't have access to your actual image file, you'll need to:
 
 Once you add the file, the favicon will appear automatically!
 
+
+

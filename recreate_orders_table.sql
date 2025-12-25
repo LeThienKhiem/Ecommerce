@@ -30,3 +30,5 @@ COMMENT ON COLUMN orders.total_price IS 'Total order price in smallest currency 
 COMMENT ON COLUMN orders.payment_method IS 'Payment method: local_transfer or cod';
 COMMENT ON COLUMN orders.products IS 'JSON array of ordered products with details';
 
+
+

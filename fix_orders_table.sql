@@ -76,3 +76,5 @@ ALTER TABLE orders DISABLE ROW LEVEL SECURITY;
 CREATE INDEX IF NOT EXISTS idx_orders_created_at ON orders(created_at DESC);
 CREATE INDEX IF NOT EXISTS idx_orders_payment_method ON orders(payment_method);
 
+
+

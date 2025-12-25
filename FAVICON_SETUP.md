@@ -36,3 +36,5 @@ If you want to use a different filename or location:
 
 The layout.tsx file has been updated to include icon metadata. Once you add the favicon file to the `app` directory, it will be automatically detected and used.
 
+
+
