@@ -32,10 +32,10 @@ export default function AddToCartButton({ product, className = "" }: AddToCartBu
         disabled={isAdding}
         className={`w-full bg-apple-blue text-white py-3 rounded-full hover:bg-blue-600 transition-colors font-medium disabled:opacity-50 disabled:cursor-not-allowed ${className}`}
       >
-        {isAdding ? "Adding..." : "Add to Cart"}
+        {isAdding ? "Đang thêm..." : "Thêm Vào Giỏ"}
       </button>
       <Toast
-        message={`${product.title} added to cart`}
+        message={`${product.title} đã được thêm vào giỏ hàng`}
         isVisible={showToast}
         onClose={() => setShowToast(false)}
       />

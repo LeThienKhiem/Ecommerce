@@ -33,22 +33,22 @@ export default function CartPage() {
             className="inline-flex items-center text-gray-600 hover:text-apple-gray-900 transition-colors mb-8"
           >
             <ArrowLeft className="h-4 w-4 mr-2" />
-            Continue Shopping
+            Tiếp Tục Mua Sắm
           </Link>
 
           <div className="text-center py-20">
             <ShoppingBag className="h-16 w-16 text-gray-300 mx-auto mb-4" />
             <h2 className="text-2xl font-semibold text-apple-gray-900 mb-2">
-              Your cart is empty
+              Giỏ Hàng Của Bạn Đang Trống
             </h2>
             <p className="text-gray-600 mb-8">
-              Start adding items to your cart
+              Hãy bắt đầu thêm sản phẩm vào giỏ hàng
             </p>
             <Link
               href="/products"
               className="inline-block bg-apple-blue text-white px-8 py-3 rounded-full hover:bg-blue-600 transition-colors font-medium"
             >
-              Browse Products
+              Xem Sản Phẩm
             </Link>
           </div>
         </main>
@@ -70,7 +70,7 @@ export default function CartPage() {
         </Link>
 
         <h1 className="text-3xl md:text-4xl font-semibold text-apple-gray-900 mb-8">
-          Shopping Cart
+          Giỏ Hàng
         </h1>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
@@ -153,14 +153,14 @@ export default function CartPage() {
 
                       <div className="mt-2 flex items-center justify-between">
                         <span className="text-sm text-gray-500">
-                          Subtotal: <span className="font-medium text-apple-gray-900">{(itemTotal / 1000).toFixed(0)}k VND</span>
+                          Tạm tính: <span className="font-medium text-apple-gray-900">{(itemTotal / 1000).toFixed(0)}k VND</span>
                         </span>
                         <button
                           onClick={() => removeFromCart(item.product.id || item.product.slug)}
                           className="text-red-500 hover:text-red-600 transition-colors flex items-center gap-1 text-sm"
                         >
                           <Trash2 className="h-4 w-4" />
-                          Remove
+                          Xóa
                         </button>
                       </div>
                     </div>
@@ -174,24 +174,24 @@ export default function CartPage() {
           <div className="lg:col-span-1">
             <div className="bg-white border border-gray-200 rounded-lg p-6 sticky top-24">
               <h2 className="text-xl font-semibold text-apple-gray-900 mb-6">
-                Order Summary
+                Tóm Tắt Đơn Hàng
               </h2>
 
               <div className="space-y-4 mb-6">
                 <div className="flex justify-between text-gray-600">
-                  <span>Subtotal ({totalItems} {totalItems === 1 ? "item" : "items"})</span>
+                  <span>Tạm tính ({totalItems} {totalItems === 1 ? "sản phẩm" : "sản phẩm"})</span>
                   <span className="font-medium text-apple-gray-900">
                     {(totalPrice / 1000).toFixed(0)}k VND
                   </span>
                 </div>
                 <div className="flex justify-between text-gray-600">
-                  <span>Shipping</span>
+                  <span>Phí Vận Chuyển</span>
                   <span className="font-medium text-apple-gray-900">
-                    {shipping === 0 ? "Free" : `${(shipping / 1000).toFixed(0)}k VND`}
+                    {shipping === 0 ? "Miễn Phí" : `${(shipping / 1000).toFixed(0)}k VND`}
                   </span>
                 </div>
                 <div className="border-t border-gray-200 pt-4 flex justify-between">
-                  <span className="text-lg font-semibold text-apple-gray-900">Total</span>
+                  <span className="text-lg font-semibold text-apple-gray-900">Tổng Cộng</span>
                   <span className="text-xl font-semibold text-apple-gray-900">
                     {(finalTotal / 1000).toFixed(0)}k VND
                   </span>
@@ -202,7 +202,7 @@ export default function CartPage() {
                 href="/checkout"
                 className="block w-full bg-apple-blue text-white py-3 rounded-full hover:bg-blue-600 transition-colors font-medium text-center"
               >
-                Proceed to Checkout
+                Tiến Hành Thanh Toán
               </Link>
             </div>
           </div>

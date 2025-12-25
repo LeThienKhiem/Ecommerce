@@ -31,7 +31,7 @@ export default function Header() {
                 isActive("/") ? "text-apple-gray-900 font-medium" : "text-gray-600 hover:text-apple-gray-900"
               }`}
             >
-              Home
+              Trang Chủ
             </Link>
             <Link 
               href="/products" 
@@ -39,7 +39,7 @@ export default function Header() {
                 isActive("/products") ? "text-apple-gray-900 font-medium" : "text-gray-600 hover:text-apple-gray-900"
               }`}
             >
-              Products
+              Sản Phẩm
             </Link>
             <Link 
               href="/about" 
@@ -47,7 +47,7 @@ export default function Header() {
                 isActive("/about") ? "text-apple-gray-900 font-medium" : "text-gray-600 hover:text-apple-gray-900"
               }`}
             >
-              About
+              Giới Thiệu
             </Link>
             <Link 
               href="/contact" 
@@ -55,7 +55,7 @@ export default function Header() {
                 isActive("/contact") ? "text-apple-gray-900 font-medium" : "text-gray-600 hover:text-apple-gray-900"
               }`}
             >
-              Contact
+              Liên Hệ
             </Link>
           </div>
 

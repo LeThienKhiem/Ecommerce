@@ -62,7 +62,7 @@ export default function SearchBar() {
       <button
         onClick={() => setIsOpen(true)}
         className="p-2 text-gray-600 hover:text-apple-gray-900 transition-colors"
-        aria-label="Search products"
+        aria-label="Tìm kiếm sản phẩm"
       >
         <Search className="h-5 w-5" />
       </button>
@@ -78,7 +78,7 @@ export default function SearchBar() {
           type="text"
           value={inputValue}
           onChange={(e) => setInputValue(e.target.value)}
-          placeholder="Search products..."
+          placeholder="Tìm kiếm sản phẩm..."
           className="pl-10 pr-10 py-2 border border-gray-300 rounded-full focus:outline-none focus:ring-2 focus:ring-apple-blue focus:border-transparent w-64 text-sm"
         />
         {inputValue && (
@@ -86,7 +86,7 @@ export default function SearchBar() {
             type="button"
             onClick={handleClear}
             className="absolute right-3 text-gray-400 hover:text-gray-600 transition-colors"
-            aria-label="Clear search"
+            aria-label="Xóa tìm kiếm"
           >
             <X className="h-4 w-4" />
           </button>

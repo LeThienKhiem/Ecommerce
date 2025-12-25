@@ -49,16 +49,16 @@ export default async function Home({
       {!searchQuery && (
         <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-24 text-center">
           <h1 className="text-5xl md:text-7xl font-semibold text-apple-gray-900 mb-6">
-            Discover Your Style
+            Khám Phá Phong Cách Của Bạn
           </h1>
           <p className="text-xl text-gray-600 mb-10 max-w-2xl mx-auto">
-            Curated products designed for your lifestyle
+            Sản phẩm được tuyển chọn dành cho phong cách sống của bạn
           </p>
           <Link
             href="/products"
             className="inline-block bg-apple-blue text-white px-8 py-3 rounded-full hover:bg-blue-600 transition-colors text-sm font-medium"
           >
-            Shop Now
+            Mua Ngay
           </Link>
         </section>
       )}
@@ -66,7 +66,7 @@ export default async function Home({
       {/* Products Section */}
       <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
         <h2 className="text-3xl md:text-4xl font-semibold text-apple-gray-900 mb-12 text-center">
-          {searchQuery ? `Search Results for "${searchQuery}"` : "Featured Products"}
+          {searchQuery ? `Kết quả tìm kiếm cho "${searchQuery}"` : "Sản Phẩm Nổi Bật"}
         </h2>
         
         {filteredProducts.length > 0 ? (
@@ -79,15 +79,15 @@ export default async function Home({
           <div className="text-center py-20">
             <p className="text-gray-500 mb-4">
               {searchQuery 
-                ? `No products found matching "${searchQuery}"`
-                : "No products available at the moment."}
+                ? `Không tìm thấy sản phẩm nào khớp với "${searchQuery}"`
+                : "Hiện tại không có sản phẩm nào."}
             </p>
             {searchQuery && (
               <Link
                 href="/"
                 className="text-apple-blue hover:underline"
               >
-                Clear search and view all products
+                Xóa tìm kiếm và xem tất cả sản phẩm
               </Link>
             )}
           </div>
@@ -101,57 +101,57 @@ export default async function Home({
             <div>
               <h4 className="font-semibold text-apple-gray-900 mb-4">Kilolook Store</h4>
               <p className="text-sm text-gray-600">
-                Modern e-commerce experience
+                Trải nghiệm thương mại điện tử hiện đại
               </p>
             </div>
             <div>
-              <h4 className="font-semibold text-apple-gray-900 mb-4">Shop</h4>
+              <h4 className="font-semibold text-apple-gray-900 mb-4">Cửa Hàng</h4>
               <ul className="space-y-2 text-sm text-gray-600">
                 <li>
                   <Link href="/products" className="hover:text-apple-gray-900 transition-colors">
-                    All Products
+                    Tất Cả Sản Phẩm
                   </Link>
                 </li>
                 <li>
                   <Link href="/products?category=featured" className="hover:text-apple-gray-900 transition-colors">
-                    Featured
+                    Nổi Bật
                   </Link>
                 </li>
               </ul>
             </div>
             <div>
-              <h4 className="font-semibold text-apple-gray-900 mb-4">Company</h4>
+              <h4 className="font-semibold text-apple-gray-900 mb-4">Công Ty</h4>
               <ul className="space-y-2 text-sm text-gray-600">
                 <li>
                   <Link href="/about" className="hover:text-apple-gray-900 transition-colors">
-                    About
+                    Giới Thiệu
                   </Link>
                 </li>
                 <li>
                   <Link href="/contact" className="hover:text-apple-gray-900 transition-colors">
-                    Contact
+                    Liên Hệ
                   </Link>
                 </li>
               </ul>
             </div>
             <div>
-              <h4 className="font-semibold text-apple-gray-900 mb-4">Legal</h4>
+              <h4 className="font-semibold text-apple-gray-900 mb-4">Pháp Lý</h4>
               <ul className="space-y-2 text-sm text-gray-600">
                 <li>
                   <Link href="/privacy" className="hover:text-apple-gray-900 transition-colors">
-                    Privacy Policy
+                    Chính Sách Bảo Mật
                   </Link>
                 </li>
                 <li>
                   <Link href="/terms" className="hover:text-apple-gray-900 transition-colors">
-                    Terms of Service
+                    Điều Khoản Dịch Vụ
                   </Link>
                 </li>
               </ul>
             </div>
           </div>
           <div className="border-t border-gray-200 mt-8 pt-8 text-center text-sm text-gray-600">
-            <p>&copy; {new Date().getFullYear()} Kilolook Store. All rights reserved.</p>
+            <p>&copy; {new Date().getFullYear()} Kilolook Store. Bảo lưu mọi quyền.</p>
           </div>
         </div>
       </footer>

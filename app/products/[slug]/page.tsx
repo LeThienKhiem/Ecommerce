@@ -69,7 +69,7 @@ export default async function ProductDetailPage({
           className="inline-flex items-center text-gray-600 hover:text-apple-gray-900 transition-colors mb-6"
         >
           <ArrowLeft className="h-4 w-4 mr-2" />
-          Back to Products
+          Quay Lại Sản Phẩm
         </Link>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-16">
@@ -110,21 +110,21 @@ export default async function ProductDetailPage({
               </div>
               {discount && (
                 <span className="text-sm text-red-500 font-medium">
-                  Save {discount}%
+                  Tiết kiệm {discount}%
                 </span>
               )}
             </div>
 
             {/* Shipping Info */}
             <div className="text-green-600 font-bold">
-              🚚 Estimated Delivery: 7 - 10 days
+              🚚 Thời gian giao hàng dự kiến: 7 - 10 ngày
             </div>
 
             {/* Description */}
             {product.description && (
               <div className="space-y-3">
                 <h2 className="text-xl font-semibold text-apple-gray-900">
-                  Description
+                  Mô Tả
                 </h2>
                 <p className="text-gray-600 leading-relaxed">
                   {product.description}
@@ -140,25 +140,25 @@ export default async function ProductDetailPage({
                 href="/checkout"
                 className="w-full flex items-center justify-center gap-2 border border-gray-300 text-apple-gray-900 py-3 rounded-full hover:bg-gray-50 transition-colors font-medium text-sm"
               >
-                Checkout
+                Thanh Toán
               </Link>
             </div>
 
             {/* Product Info Table */}
             <div className="border-t border-gray-200 pt-6 space-y-4">
               <h3 className="text-lg font-semibold text-apple-gray-900 mb-4">
-                Product Information
+                Thông Tin Sản Phẩm
               </h3>
               <div className="grid grid-cols-2 gap-4 text-sm">
                 {product.category && (
                   <>
-                    <div className="text-gray-600">Category</div>
+                    <div className="text-gray-600">Danh Mục</div>
                     <div className="text-apple-gray-900 font-medium">{product.category}</div>
                   </>
                 )}
                 {product.slug && (
                   <>
-                    <div className="text-gray-600">SKU</div>
+                    <div className="text-gray-600">Mã Sản Phẩm</div>
                     <div className="text-apple-gray-900 font-medium">{product.slug}</div>
                   </>
                 )}
