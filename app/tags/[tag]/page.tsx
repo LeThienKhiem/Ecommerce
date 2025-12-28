@@ -65,7 +65,7 @@ export default async function TagPage({
             Top sản phẩm {decodedTag} mới nhất
           </h1>
           <p className="text-lg text-gray-600">
-            Tìm thấy {products.length} {products.length === 1 ? "sản phẩm" : "sản phẩm"} với tag "{decodedTag}"
+            Tìm thấy {products.length} {products.length === 1 ? "sản phẩm" : "sản phẩm"} với tag &quot;{decodedTag}&quot;
           </p>
         </div>
 
@@ -79,7 +79,7 @@ export default async function TagPage({
         ) : (
           <div className="text-center py-20">
             <p className="text-gray-500 mb-4">
-              Không tìm thấy sản phẩm nào với tag "{decodedTag}"
+              Không tìm thấy sản phẩm nào với tag &quot;{decodedTag}&quot;
             </p>
           </div>
         )}
