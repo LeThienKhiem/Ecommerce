@@ -1,8 +1,9 @@
 "use client";
 
+import { useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { Menu, ShoppingCart } from "lucide-react";
+import { Menu, X, ShoppingCart } from "lucide-react";
 import { usePathname } from "next/navigation";
 import { useCart } from "@/contexts/CartContext";
 import { useLanguage } from "@/contexts/LanguageContext";
@@ -12,11 +13,16 @@ export default function Header() {
   const pathname = usePathname();
   const { getTotalItems } = useCart();
   const { lang, setLang, t } = useLanguage();
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   const isActive = (path: string) => pathname === path;
 
   const toggleLanguage = () => {
     setLang(lang === "vi" ? "en" : "vi");
+  };
+
+  const closeMobileMenu = () => {
+    setIsMobileMenuOpen(false);
   };
 
   return (
@@ -98,11 +104,72 @@ export default function Header() {
                 </span>
               )}
             </Link>
-            <button className="md:hidden p-2 text-gray-600">
-              <Menu className="h-5 w-5" />
+            <button 
+              onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+              className="md:hidden p-2 text-gray-600 hover:text-apple-gray-900 transition-colors"
+              aria-label="Toggle mobile menu"
+            >
+              {isMobileMenuOpen ? (
+                <X className="h-5 w-5" />
+              ) : (
+                <Menu className="h-5 w-5" />
+              )}
             </button>
           </div>
         </div>
+
+        {/* Mobile Navigation Menu */}
+        {isMobileMenuOpen && (
+          <div className="md:hidden border-t border-gray-200 bg-white">
+            <div className="px-4 py-4 space-y-3">
+              <Link 
+                href="/" 
+                onClick={closeMobileMenu}
+                className={`block py-2 text-sm transition-colors duration-200 ${
+                  isActive("/") ? "text-apple-gray-900 font-medium" : "text-gray-600 hover:text-apple-gray-900"
+                }`}
+              >
+                {t.home}
+              </Link>
+              <Link 
+                href="/products" 
+                onClick={closeMobileMenu}
+                className={`block py-2 text-sm transition-colors duration-200 ${
+                  isActive("/products") ? "text-apple-gray-900 font-medium" : "text-gray-600 hover:text-apple-gray-900"
+                }`}
+              >
+                {t.products}
+              </Link>
+              <Link 
+                href="/wholesale" 
+                onClick={closeMobileMenu}
+                className={`block py-2 text-sm transition-colors duration-200 ${
+                  isActive("/wholesale") ? "text-apple-gray-900 font-medium" : "text-gray-600 hover:text-apple-gray-900"
+                }`}
+              >
+                {t.wholesale}
+              </Link>
+              <Link 
+                href="/about" 
+                onClick={closeMobileMenu}
+                className={`block py-2 text-sm transition-colors duration-200 ${
+                  isActive("/about") ? "text-apple-gray-900 font-medium" : "text-gray-600 hover:text-apple-gray-900"
+                }`}
+              >
+                {t.about}
+              </Link>
+              <Link 
+                href="/contact" 
+                onClick={closeMobileMenu}
+                className={`block py-2 text-sm transition-colors duration-200 ${
+                  isActive("/contact") ? "text-apple-gray-900 font-medium" : "text-gray-600 hover:text-apple-gray-900"
+                }`}
+              >
+                {t.contact}
+              </Link>
+            </div>
+          </div>
+        )}
       </nav>
     </header>
   );
