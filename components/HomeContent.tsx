@@ -142,3 +142,4 @@ export default function HomeContent({ featuredProducts, searchQuery }: HomeConte
 
 
 
+

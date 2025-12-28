@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { Menu, ShoppingCart } from "lucide-react";
 import { usePathname } from "next/navigation";
 import { useCart } from "@/contexts/CartContext";
@@ -24,9 +25,14 @@ export default function Header() {
         <div className="flex items-center justify-between h-14">
           {/* Logo */}
           <Link href="/" className="flex items-center">
-            <span className="text-xl font-semibold text-apple-gray-900">
-              Kilolook Store
-            </span>
+            <Image
+              src="/header.png"
+              alt="Kilolook"
+              width={120}
+              height={40}
+              className="h-8 w-auto object-contain"
+              priority
+            />
           </Link>
 
           {/* Desktop Navigation */}

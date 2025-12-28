@@ -20,3 +20,4 @@ COMMENT ON COLUMN products.is_featured IS 'Whether the product should be shown o
 
 
 
+

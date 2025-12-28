@@ -43,6 +43,8 @@ export default function AdminDashboard() {
     category: "",
     source_url: "",
     affiliate_link: "",
+    stock: "",
+    product_type: "affiliate" as "affiliate" | "direct_sale",
     tags: "",
     is_published: true,
     is_featured: true,
@@ -144,6 +146,8 @@ export default function AdminDashboard() {
 
   const handleEditProduct = (product: Product) => {
     setEditingProductId(product.id!);
+    // Determine product type based on affiliate_link
+    const productType = product.affiliate_link ? "affiliate" : "direct_sale";
     setNewProduct({
       title: product.title,
       slug: product.slug,
@@ -155,6 +159,8 @@ export default function AdminDashboard() {
       category: product.category || "",
       source_url: product.source_url || "",
       affiliate_link: product.affiliate_link || "",
+      stock: product.stock?.toString() || "",
+      product_type: productType,
       tags: product.tags?.join(", ") || "",
       is_published: product.is_published ?? true,
       is_featured: product.is_featured ?? true,
@@ -176,6 +182,8 @@ export default function AdminDashboard() {
         category: "",
         source_url: "",
         affiliate_link: "",
+        stock: "",
+        product_type: "affiliate",
         tags: "",
         is_published: true,
         is_featured: true,
@@ -189,6 +197,12 @@ export default function AdminDashboard() {
         return;
       }
 
+      // Validate direct sale stock
+      if (newProduct.product_type === "direct_sale" && (!newProduct.stock || parseInt(newProduct.stock) < 0)) {
+        alert("Vui lòng nhập số lượng tồn kho hợp lệ cho sản phẩm bán trực tiếp");
+        return;
+      }
+
       const productData: any = {
         title: newProduct.title,
         slug: newProduct.slug,
@@ -199,11 +213,20 @@ export default function AdminDashboard() {
         main_category: newProduct.main_category || null,
         category: newProduct.category || null,
         source_url: newProduct.source_url || null,
-        affiliate_link: newProduct.affiliate_link || null,
         tags: newProduct.tags ? newProduct.tags.split(",").map((tag) => tag.trim()).filter((tag) => tag.length > 0) : [],
         is_published: newProduct.is_published,
         is_featured: newProduct.is_featured,
       };
+
+      // Handle product type logic
+      if (newProduct.product_type === "affiliate") {
+        productData.affiliate_link = newProduct.affiliate_link || null;
+        productData.stock = 0; // Set stock to 0 for affiliate products
+      } else {
+        // Direct sale
+        productData.affiliate_link = null; // Clear affiliate_link for direct sale
+        productData.stock = parseInt(newProduct.stock) || 0;
+      }
 
       // Set sort_order for new products (use current timestamp to appear at top)
       if (!editingProductId) {
@@ -409,6 +432,9 @@ export default function AdminDashboard() {
             : String(product.tags).split(",").map((tag: string) => tag.trim()).filter((tag: string) => tag.length > 0)
           : [];
 
+        // Determine product type from affiliate_link
+        const hasAffiliateLink = product.affiliate_link && String(product.affiliate_link).trim().length > 0;
+        
         const productData: any = {
           title: String(product.title).trim(),
           slug: product.slug || generateSlug(product.title),
@@ -419,11 +445,19 @@ export default function AdminDashboard() {
           main_category: product.main_category ? String(product.main_category).trim() : null,
           category: product.category ? String(product.category).trim() : null,
           source_url: product.source_url ? String(product.source_url).trim() : null,
-          affiliate_link: product.affiliate_link ? String(product.affiliate_link).trim() : null,
           tags: tags,
           is_published: product.is_published !== undefined ? Boolean(product.is_published) : true,
           is_featured: product.is_featured !== undefined ? Boolean(product.is_featured) : true,
         };
+
+        // Handle product type logic
+        if (hasAffiliateLink) {
+          productData.affiliate_link = String(product.affiliate_link).trim();
+          productData.stock = 0; // Set stock to 0 for affiliate products
+        } else {
+          productData.affiliate_link = null;
+          productData.stock = product.stock !== undefined ? parseInt(product.stock) || 0 : 0;
+        }
 
         // Set sort_order for new products (use current timestamp to appear at top)
         productData.sort_order = Date.now();
@@ -880,20 +914,88 @@ export default function AdminDashboard() {
                       placeholder="https://..."
                     />
                   </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Affiliate Link (Link Tiếp Thị)
+                  
+                  {/* Product Type Switch */}
+                  <div className="md:col-span-2">
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Loại sản phẩm *
                     </label>
-                    <input
-                      type="text"
-                      value={newProduct.affiliate_link}
-                      onChange={(e) =>
-                        setNewProduct({ ...newProduct, affiliate_link: e.target.value })
-                      }
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none"
-                      placeholder="https://shope.ee/..."
-                    />
+                    <div className="flex gap-4">
+                      <label className="flex items-center cursor-pointer">
+                        <input
+                          type="radio"
+                          name="product_type"
+                          value="affiliate"
+                          checked={newProduct.product_type === "affiliate"}
+                          onChange={(e) =>
+                            setNewProduct({
+                              ...newProduct,
+                              product_type: "affiliate",
+                              stock: "", // Clear stock when switching to affiliate
+                            })
+                          }
+                          className="mr-2"
+                        />
+                        <span className="text-sm text-gray-700">Tiếp thị liên kết (Affiliate)</span>
+                      </label>
+                      <label className="flex items-center cursor-pointer">
+                        <input
+                          type="radio"
+                          name="product_type"
+                          value="direct_sale"
+                          checked={newProduct.product_type === "direct_sale"}
+                          onChange={(e) =>
+                            setNewProduct({
+                              ...newProduct,
+                              product_type: "direct_sale",
+                              affiliate_link: "", // Clear affiliate_link when switching to direct sale
+                            })
+                          }
+                          className="mr-2"
+                        />
+                        <span className="text-sm text-gray-700">Bán trực tiếp (Direct Sale)</span>
+                      </label>
+                    </div>
                   </div>
+
+                  {/* Conditional: Affiliate Link (only for affiliate products) */}
+                  {newProduct.product_type === "affiliate" && (
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        Affiliate Link (Link Tiếp Thị) *
+                      </label>
+                      <input
+                        type="text"
+                        value={newProduct.affiliate_link}
+                        onChange={(e) =>
+                          setNewProduct({ ...newProduct, affiliate_link: e.target.value })
+                        }
+                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                        placeholder="https://shope.ee/..."
+                        required={newProduct.product_type === "affiliate"}
+                      />
+                    </div>
+                  )}
+
+                  {/* Conditional: Stock (only for direct sale products) */}
+                  {newProduct.product_type === "direct_sale" && (
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        Số lượng tồn kho (Stock) *
+                      </label>
+                      <input
+                        type="number"
+                        min="0"
+                        value={newProduct.stock}
+                        onChange={(e) =>
+                          setNewProduct({ ...newProduct, stock: e.target.value })
+                        }
+                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                        placeholder="0"
+                        required={newProduct.product_type === "direct_sale"}
+                      />
+                    </div>
+                  )}
                   <div className="md:col-span-2">
                     <label className="block text-sm font-medium text-gray-700 mb-1">
                       Tags (phân cách bằng dấu phẩy)

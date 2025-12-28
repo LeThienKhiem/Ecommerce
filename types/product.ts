@@ -9,6 +9,7 @@ export interface Product {
   category?: string;
   source_url?: string;
   affiliate_link?: string;
+  stock?: number;
   tags?: string[];
   is_published?: boolean;
   is_featured?: boolean;

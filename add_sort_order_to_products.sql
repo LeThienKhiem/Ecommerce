@@ -26,3 +26,4 @@ COMMENT ON COLUMN products.sort_order IS 'Sort order for products (higher = appe
 
 
 
+

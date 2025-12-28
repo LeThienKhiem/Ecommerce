@@ -220,17 +220,19 @@ export default async function ProductDetailPage({
                   rel="noopener noreferrer"
                   className="w-full bg-apple-blue text-white py-3 rounded-full hover:bg-blue-600 transition-colors font-medium text-center block"
                 >
-                  Mua ngay giá rẻ
+                  Mua ngay trên Shopee
                 </a>
               ) : (
                 <>
                   <AddToCartButton product={product} />
-                  <Link
-                    href="/checkout"
-                    className="w-full flex items-center justify-center gap-2 border border-gray-300 text-apple-gray-900 py-3 rounded-full hover:bg-gray-50 transition-colors font-medium text-sm"
-                  >
-                    Thanh Toán
-                  </Link>
+                  {product.stock !== undefined && product.stock > 0 && (
+                    <Link
+                      href="/checkout"
+                      className="w-full flex items-center justify-center gap-2 border border-gray-300 text-apple-gray-900 py-3 rounded-full hover:bg-gray-50 transition-colors font-medium text-sm"
+                    >
+                      Thanh Toán
+                    </Link>
+                  )}
                 </>
               )}
             </div>
@@ -251,6 +253,14 @@ export default async function ProductDetailPage({
                   <>
                     <div className="text-gray-600">Mã Sản Phẩm</div>
                     <div className="text-apple-gray-900 font-medium">{product.slug}</div>
+                  </>
+                )}
+                {!product.affiliate_link && product.stock !== undefined && (
+                  <>
+                    <div className="text-gray-600">Số lượng tồn kho</div>
+                    <div className={`font-medium ${product.stock > 0 ? "text-apple-gray-900" : "text-red-600"}`}>
+                      {product.stock > 0 ? `${product.stock} sản phẩm` : "Hết hàng"}
+                    </div>
                   </>
                 )}
               </div>

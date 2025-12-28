@@ -134,7 +134,19 @@ export default function ProductCard({ product, index }: ProductCardProps) {
         </p>
       </div>
       
-      <AddToCartButton product={product} className="w-full text-sm font-medium" />
+      {/* Hybrid Button Logic: Affiliate vs Direct Sale */}
+      {product.affiliate_link ? (
+        <a
+          href={product.affiliate_link}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="w-full bg-apple-blue text-white py-3 rounded-full hover:bg-blue-600 transition-colors font-medium text-center block text-sm"
+        >
+          Mua ngay trên Shopee
+        </a>
+      ) : (
+        <AddToCartButton product={product} className="w-full text-sm font-medium" />
+      )}
     </div>
   );
 }

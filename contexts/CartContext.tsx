@@ -8,9 +8,14 @@ interface CartItem {
   quantity: number;
 }
 
+interface AddToCartResult {
+  success: boolean;
+  message?: string;
+}
+
 interface CartContextType {
   cart: CartItem[];
-  addToCart: (product: Product, quantity?: number) => void;
+  addToCart: (product: Product, quantity?: number) => AddToCartResult;
   removeFromCart: (productId: number | string) => void;
   updateQuantity: (productId: number | string, quantity: number) => void;
   clearCart: () => void;
@@ -61,22 +66,78 @@ export function CartProvider({ children }: { children: ReactNode }) {
     };
   }, [cart, mounted]);
 
-  const addToCart = (product: Product, quantity: number = 1) => {
+  const addToCart = (product: Product, quantity: number = 1): AddToCartResult => {
+    // Check if product is affiliate (no stock management)
+    if (product.affiliate_link) {
+      // Affiliate products can always be added (no stock check)
+      setCart((prevCart) => {
+        const existingItem = prevCart.find(
+          (item) => item.product.id === product.id || item.product.slug === product.slug
+        );
+
+        if (existingItem) {
+          return prevCart.map((item) =>
+            (item.product.id === product.id || item.product.slug === product.slug)
+              ? { ...item, quantity: item.quantity + quantity }
+              : item
+          );
+        }
+
+        return [...prevCart, { product, quantity }];
+      });
+      return { success: true };
+    }
+
+    // Direct sale products: Check stock
+    const currentStock = product.stock ?? 0;
+    if (currentStock <= 0) {
+      return {
+        success: false,
+        message: "Sản phẩm đã hết hàng",
+      };
+    }
+
+    // Use functional update to check stock against current cart state
+    let stockValidationFailed = false;
+    let errorMessage = "";
+
     setCart((prevCart) => {
       const existingItem = prevCart.find(
         (item) => item.product.id === product.id || item.product.slug === product.slug
       );
 
       if (existingItem) {
+        const newQuantity = existingItem.quantity + quantity;
+        if (newQuantity > currentStock) {
+          stockValidationFailed = true;
+          errorMessage = `Chỉ còn ${currentStock} sản phẩm trong kho`;
+          return prevCart; // Don't update
+        }
         return prevCart.map((item) =>
           (item.product.id === product.id || item.product.slug === product.slug)
-            ? { ...item, quantity: item.quantity + quantity }
+            ? { ...item, quantity: newQuantity }
             : item
         );
       }
 
+      // New item: check if quantity exceeds stock
+      if (quantity > currentStock) {
+        stockValidationFailed = true;
+        errorMessage = `Chỉ còn ${currentStock} sản phẩm trong kho`;
+        return prevCart; // Don't add
+      }
+
       return [...prevCart, { product, quantity }];
     });
+
+    if (stockValidationFailed) {
+      return {
+        success: false,
+        message: errorMessage,
+      };
+    }
+
+    return { success: true };
   };
 
   const removeFromCart = (productId: number | string) => {
@@ -95,11 +156,20 @@ export function CartProvider({ children }: { children: ReactNode }) {
     }
 
     setCart((prevCart) =>
-      prevCart.map((item) =>
-        (item.product.id === productId || item.product.slug === productId)
-          ? { ...item, quantity }
-          : item
-      )
+      prevCart.map((item) => {
+        if (item.product.id === productId || item.product.slug === productId) {
+          // Check stock for direct sale products
+          if (!item.product.affiliate_link && item.product.stock !== undefined) {
+            const availableStock = item.product.stock;
+            if (quantity > availableStock) {
+              // Limit quantity to available stock
+              return { ...item, quantity: availableStock };
+            }
+          }
+          return { ...item, quantity };
+        }
+        return item;
+      })
     );
   };
 

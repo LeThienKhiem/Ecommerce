@@ -18,3 +18,4 @@ COMMENT ON COLUMN products.tags IS 'Array of tags/keywords for SEO and categoriz
 
 
 
+
