@@ -35,6 +35,7 @@ export default function AdminDashboard() {
     images: "",
     category: "",
     source_url: "",
+    affiliate_link: "",
     tags: "",
     is_published: true,
   });
@@ -98,6 +99,7 @@ export default function AdminDashboard() {
         images: newProduct.images ? newProduct.images.split(",").map((img) => img.trim()) : [],
         category: newProduct.category || null,
         source_url: newProduct.source_url || null,
+        affiliate_link: newProduct.affiliate_link || null,
         tags: newProduct.tags ? newProduct.tags.split(",").map((tag) => tag.trim()).filter((tag) => tag.length > 0) : [],
         is_published: newProduct.is_published,
       };
@@ -117,6 +119,7 @@ export default function AdminDashboard() {
         images: "",
         category: "",
         source_url: "",
+        affiliate_link: "",
         tags: "",
         is_published: true,
       });
@@ -223,6 +226,7 @@ export default function AdminDashboard() {
           images: images,
           category: product.category ? String(product.category).trim() : null,
           source_url: product.source_url ? String(product.source_url).trim() : null,
+          affiliate_link: product.affiliate_link ? String(product.affiliate_link).trim() : null,
           tags: tags,
           is_published: product.is_published !== undefined ? Boolean(product.is_published) : true,
         };
@@ -298,6 +302,7 @@ export default function AdminDashboard() {
           const description = mapColumn(row, ["description", "mô_tả", "desc"]);
           const category = mapColumn(row, ["category", "danh_mục", "cat"]);
           const sourceUrl = mapColumn(row, ["source_url", "source", "url", "link"]);
+          const affiliateLink = mapColumn(row, ["affiliate_link", "affiliate", "link_tiếp_thị", "affiliate_url"]);
 
           // Validate required fields
           if (!title || !priceSelling || !imageUrl) {
@@ -318,6 +323,7 @@ export default function AdminDashboard() {
             images: images,
             category: category || null,
             source_url: sourceUrl || null,
+            affiliate_link: affiliateLink || null,
             is_published: true,
           };
 
@@ -612,6 +618,20 @@ export default function AdminDashboard() {
                       }
                       className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none"
                       placeholder="https://..."
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Affiliate Link (Link Tiếp Thị)
+                    </label>
+                    <input
+                      type="text"
+                      value={newProduct.affiliate_link}
+                      onChange={(e) =>
+                        setNewProduct({ ...newProduct, affiliate_link: e.target.value })
+                      }
+                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                      placeholder="https://shope.ee/..."
                     />
                   </div>
                   <div className="md:col-span-2">
