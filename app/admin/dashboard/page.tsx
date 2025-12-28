@@ -279,16 +279,16 @@ export default function AdminDashboard() {
   };
 
   const randomizeProductOrder = async () => {
-    if (!confirm("Bạn có chắc chắn muốn sắp xếp ngẫu nhiên thứ tự sản phẩm? (Sản phẩm mới thêm sau sẽ vẫn ở trên cùng)")) {
+    if (!confirm("Bạn có chắc chắn muốn sắp xếp ngẫu nhiên thứ tự sản phẩm? (Sản phẩm còn hàng sẽ ở trên, sản phẩm hết hàng sẽ ở dưới)")) {
       return;
     }
 
     setIsRandomizing(true);
     try {
-      // Fetch all products
+      // Fetch all products with stock and affiliate_link to determine availability
       const { data: allProducts, error: fetchError } = await supabase
         .from("products")
-        .select("id");
+        .select("id, stock, affiliate_link");
 
       if (fetchError) throw fetchError;
 
@@ -298,13 +298,33 @@ export default function AdminDashboard() {
         return;
       }
 
-      // Generate random sort_order values that are less than current timestamp
-      // This ensures new items added later will still appear at the top
       const currentTime = Date.now();
-      const updates = allProducts.map((product) => ({
-        id: product.id,
-        sort_order: Math.floor(Math.random() * currentTime),
-      }));
+      
+      // Generate sort_order values based on availability
+      const updates = allProducts.map((product) => {
+        // Determine availability:
+        // Available if: (stock > 0) OR (affiliate_link is present and not empty)
+        // Sold Out if: (stock <= 0 or null) AND (affiliate_link is empty/null)
+        const isAvailable = 
+          (product.stock !== null && product.stock !== undefined && product.stock > 0) ||
+          (product.affiliate_link && product.affiliate_link.trim().length > 0);
+        
+        let sortOrder: number;
+        
+        if (isAvailable) {
+          // Available items: High value range (will appear first when sorted DESC)
+          // Date.now() - random(0 to 10M) ensures values are high but randomized
+          sortOrder = currentTime - Math.floor(Math.random() * 10000000);
+        } else {
+          // Sold out items: Low value range (will appear last when sorted DESC)
+          sortOrder = Math.floor(Math.random() * 1000);
+        }
+        
+        return {
+          id: product.id,
+          sort_order: sortOrder,
+        };
+      });
 
       // Update products in batches to avoid overwhelming the database
       const batchSize = 50;
@@ -322,7 +342,7 @@ export default function AdminDashboard() {
         );
       }
 
-      alert("Sắp xếp ngẫu nhiên thành công!");
+      alert("Sắp xếp ngẫu nhiên thành công! (Sản phẩm còn hàng ở trên, hết hàng ở dưới)");
       fetchData();
     } catch (error) {
       console.error("Error randomizing product order:", error);
