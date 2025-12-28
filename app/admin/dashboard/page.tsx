@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { LogOut, Package, ShoppingBag, Plus, Trash2, CheckCircle2, Upload, FileText, FileSpreadsheet } from "lucide-react";
+import { LogOut, Package, ShoppingBag, Plus, Trash2, CheckCircle2, Upload, FileText, FileSpreadsheet, Edit2 } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import { Product } from "@/types/product";
 import { Order } from "@/types/order";
@@ -17,6 +17,10 @@ export default function AdminDashboard() {
   const [isLoading, setIsLoading] = useState(true);
   const [showAddProduct, setShowAddProduct] = useState(false);
   const [showBulkImport, setShowBulkImport] = useState(false);
+  const [editingProductId, setEditingProductId] = useState<number | null>(null);
+  const [categories, setCategories] = useState<string[]>([]);
+  const [allSubCategories, setAllSubCategories] = useState<string[]>([]);
+  const [isRandomizing, setIsRandomizing] = useState(false);
   const [importTab, setImportTab] = useState<"json" | "csv">("json");
   const [jsonInput, setJsonInput] = useState("");
   const [importProgress, setImportProgress] = useState<{
@@ -33,11 +37,13 @@ export default function AdminDashboard() {
     price_selling: "",
     description: "",
     images: "",
+    main_category: "",
     category: "",
     source_url: "",
     affiliate_link: "",
     tags: "",
     is_published: true,
+    is_featured: true,
   });
 
   // Check authentication
@@ -50,6 +56,33 @@ export default function AdminDashboard() {
     fetchData();
   }, [router]);
 
+  // Filter sub-categories based on selected main_category
+  useEffect(() => {
+    if (newProduct.main_category && allSubCategories.length > 0) {
+      // Try to fetch sub-categories for the selected main_category
+      const fetchFilteredCategories = async () => {
+        const { data } = await supabase
+          .from("products")
+          .select("category")
+          .eq("main_category", newProduct.main_category)
+          .not("category", "is", null);
+
+        if (data) {
+          const filtered = Array.from(
+            new Set(data.map((p) => p.category).filter(Boolean))
+          ) as string[];
+          // If we have filtered results, use them; otherwise show all
+          setCategories(filtered.length > 0 ? filtered.sort() : [...allSubCategories]);
+        }
+      };
+      fetchFilteredCategories();
+    } else {
+      // Show all sub-categories if no main_category selected
+      setCategories([...allSubCategories]);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [newProduct.main_category]);
+
   const fetchData = async () => {
     setIsLoading(true);
     try {
@@ -61,6 +94,21 @@ export default function AdminDashboard() {
 
       if (productsError) throw productsError;
       setProducts(productsData || []);
+
+      // Fetch distinct sub-categories
+      const { data: categoriesData, error: categoriesError } = await supabase
+        .from("products")
+        .select("category")
+        .not("category", "is", null);
+
+      if (!categoriesError && categoriesData) {
+        const uniqueCategories = Array.from(
+          new Set(categoriesData.map((p) => p.category).filter(Boolean))
+        ) as string[];
+        setAllSubCategories(uniqueCategories.sort());
+        // Set initial categories (will be filtered when main_category is selected)
+        setCategories(uniqueCategories.sort());
+      }
 
       // Fetch orders
       const { data: ordersData, error: ordersError } = await supabase
@@ -83,33 +131,29 @@ export default function AdminDashboard() {
     router.push("/admin");
   };
 
-  const handleAddProduct = async () => {
-    try {
-      if (!newProduct.title || !newProduct.slug || !newProduct.price_selling) {
-        alert("Vui lòng điền đầy đủ thông tin bắt buộc (Tên, Slug, Giá bán)");
-        return;
-      }
+  const handleEditProduct = (product: Product) => {
+    setEditingProductId(product.id!);
+    setNewProduct({
+      title: product.title,
+      slug: product.slug,
+      price_original: product.price_original?.toString() || "",
+      price_selling: product.price_selling?.toString() || "",
+      description: product.description || "",
+      images: product.images?.join(", ") || "",
+      main_category: (product as any).main_category || "",
+      category: product.category || "",
+      source_url: product.source_url || "",
+      affiliate_link: product.affiliate_link || "",
+      tags: product.tags?.join(", ") || "",
+      is_published: product.is_published ?? true,
+      is_featured: product.is_featured ?? true,
+    });
+    setShowAddProduct(true);
+  };
 
-      const productData = {
-        title: newProduct.title,
-        slug: newProduct.slug,
-        price_original: parseInt(newProduct.price_original) || parseInt(newProduct.price_selling),
-        price_selling: parseInt(newProduct.price_selling),
-        description: newProduct.description || null,
-        images: newProduct.images ? newProduct.images.split(",").map((img) => img.trim()) : [],
-        category: newProduct.category || null,
-        source_url: newProduct.source_url || null,
-        affiliate_link: newProduct.affiliate_link || null,
-        tags: newProduct.tags ? newProduct.tags.split(",").map((tag) => tag.trim()).filter((tag) => tag.length > 0) : [],
-        is_published: newProduct.is_published,
-      };
-
-      const { error } = await supabase.from("products").insert([productData]);
-
-      if (error) throw error;
-
-      alert("Thêm sản phẩm thành công!");
-      setShowAddProduct(false);
+  const handleCancelEdit = () => {
+    setEditingProductId(null);
+    setShowAddProduct(false);
       setNewProduct({
         title: "",
         slug: "",
@@ -117,16 +161,66 @@ export default function AdminDashboard() {
         price_selling: "",
         description: "",
         images: "",
+        main_category: "",
         category: "",
         source_url: "",
         affiliate_link: "",
         tags: "",
         is_published: true,
+        is_featured: true,
       });
+  };
+
+  const handleAddProduct = async () => {
+    try {
+      if (!newProduct.title || !newProduct.slug || !newProduct.price_selling) {
+        alert("Vui lòng điền đầy đủ thông tin bắt buộc (Tên, Slug, Giá bán)");
+        return;
+      }
+
+      const productData: any = {
+        title: newProduct.title,
+        slug: newProduct.slug,
+        price_original: parseInt(newProduct.price_original) || parseInt(newProduct.price_selling),
+        price_selling: parseInt(newProduct.price_selling),
+        description: newProduct.description || null,
+        images: newProduct.images ? newProduct.images.split(",").map((img) => img.trim()) : [],
+        main_category: newProduct.main_category || null,
+        category: newProduct.category || null,
+        source_url: newProduct.source_url || null,
+        affiliate_link: newProduct.affiliate_link || null,
+        tags: newProduct.tags ? newProduct.tags.split(",").map((tag) => tag.trim()).filter((tag) => tag.length > 0) : [],
+        is_published: newProduct.is_published,
+        is_featured: newProduct.is_featured,
+      };
+
+      // Set sort_order for new products (use current timestamp to appear at top)
+      if (!editingProductId) {
+        productData.sort_order = Date.now();
+      }
+
+      if (editingProductId) {
+        // Update existing product
+        const { error } = await supabase
+          .from("products")
+          .update(productData)
+          .eq("id", editingProductId);
+
+        if (error) throw error;
+        alert("Cập nhật sản phẩm thành công!");
+      } else {
+        // Insert new product
+        const { error } = await supabase.from("products").insert([productData]);
+
+        if (error) throw error;
+        alert("Thêm sản phẩm thành công!");
+      }
+
+      handleCancelEdit();
       fetchData();
     } catch (error) {
-      console.error("Error adding product:", error);
-      alert("Lỗi khi thêm sản phẩm: " + (error as Error).message);
+      console.error("Error saving product:", error);
+      alert("Lỗi khi lưu sản phẩm: " + (error as Error).message);
     }
   };
 
@@ -143,6 +237,60 @@ export default function AdminDashboard() {
     } catch (error) {
       console.error("Error deleting product:", error);
       alert("Lỗi khi xóa sản phẩm: " + (error as Error).message);
+    }
+  };
+
+  const randomizeProductOrder = async () => {
+    if (!confirm("Bạn có chắc chắn muốn sắp xếp ngẫu nhiên thứ tự sản phẩm? (Sản phẩm mới thêm sau sẽ vẫn ở trên cùng)")) {
+      return;
+    }
+
+    setIsRandomizing(true);
+    try {
+      // Fetch all products
+      const { data: allProducts, error: fetchError } = await supabase
+        .from("products")
+        .select("id");
+
+      if (fetchError) throw fetchError;
+
+      if (!allProducts || allProducts.length === 0) {
+        alert("Không có sản phẩm nào để sắp xếp");
+        setIsRandomizing(false);
+        return;
+      }
+
+      // Generate random sort_order values that are less than current timestamp
+      // This ensures new items added later will still appear at the top
+      const currentTime = Date.now();
+      const updates = allProducts.map((product) => ({
+        id: product.id,
+        sort_order: Math.floor(Math.random() * currentTime),
+      }));
+
+      // Update products in batches to avoid overwhelming the database
+      const batchSize = 50;
+      for (let i = 0; i < updates.length; i += batchSize) {
+        const batch = updates.slice(i, i + batchSize);
+        
+        // Use Promise.all to update batch in parallel
+        await Promise.all(
+          batch.map((update) =>
+            supabase
+              .from("products")
+              .update({ sort_order: update.sort_order })
+              .eq("id", update.id)
+          )
+        );
+      }
+
+      alert("Sắp xếp ngẫu nhiên thành công!");
+      fetchData();
+    } catch (error) {
+      console.error("Error randomizing product order:", error);
+      alert("Lỗi khi sắp xếp ngẫu nhiên: " + (error as Error).message);
+    } finally {
+      setIsRandomizing(false);
     }
   };
 
@@ -217,19 +365,24 @@ export default function AdminDashboard() {
             : String(product.tags).split(",").map((tag: string) => tag.trim()).filter((tag: string) => tag.length > 0)
           : [];
 
-        const productData = {
+        const productData: any = {
           title: String(product.title).trim(),
           slug: product.slug || generateSlug(product.title),
           price_original: parseInt(product.price_original) || parseInt(product.price_selling),
           price_selling: parseInt(product.price_selling),
           description: product.description ? String(product.description).trim() : null,
           images: images,
+          main_category: product.main_category ? String(product.main_category).trim() : null,
           category: product.category ? String(product.category).trim() : null,
           source_url: product.source_url ? String(product.source_url).trim() : null,
           affiliate_link: product.affiliate_link ? String(product.affiliate_link).trim() : null,
           tags: tags,
           is_published: product.is_published !== undefined ? Boolean(product.is_published) : true,
+          is_featured: product.is_featured !== undefined ? Boolean(product.is_featured) : true,
         };
+
+        // Set sort_order for new products (use current timestamp to appear at top)
+        productData.sort_order = Date.now();
 
         // Insert into Supabase
         try {
@@ -300,7 +453,8 @@ export default function AdminDashboard() {
           const priceOriginal = mapColumn(row, ["price_original", "giá_gốc", "original_price"]);
           const imageUrl = mapColumn(row, ["image", "imageurl", "image_url", "images", "hình_ảnh", "url"]);
           const description = mapColumn(row, ["description", "mô_tả", "desc"]);
-          const category = mapColumn(row, ["category", "danh_mục", "cat"]);
+          const mainCategory = mapColumn(row, ["main_category", "maincategory", "đối_tượng", "audience"]);
+          const category = mapColumn(row, ["category", "danh_mục", "cat", "sub_category", "subcategory"]);
           const sourceUrl = mapColumn(row, ["source_url", "source", "url", "link"]);
           const affiliateLink = mapColumn(row, ["affiliate_link", "affiliate", "link_tiếp_thị", "affiliate_url"]);
 
@@ -321,6 +475,7 @@ export default function AdminDashboard() {
             price_selling: parseInt(priceSelling),
             description: description || null,
             images: images,
+            main_category: mainCategory || null,
             category: category || null,
             source_url: sourceUrl || null,
             affiliate_link: affiliateLink || null,
@@ -512,19 +667,39 @@ export default function AdminDashboard() {
           <div className="space-y-6">
             <div className="flex justify-between items-center">
               <h2 className="text-xl font-semibold text-gray-900">Quản lý sản phẩm</h2>
-              <button
-                onClick={() => setShowAddProduct(!showAddProduct)}
-                className="flex items-center gap-2 px-4 py-2 bg-black text-white rounded-lg hover:bg-gray-800 transition-colors"
-              >
-                <Plus className="w-4 h-4" />
-                Thêm sản phẩm
-              </button>
+              <div className="flex gap-3">
+                <button
+                  onClick={randomizeProductOrder}
+                  disabled={isRandomizing}
+                  className="flex items-center gap-2 px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {isRandomizing ? (
+                    <>
+                      <span className="animate-spin">⏳</span>
+                      Đang xử lý...
+                    </>
+                  ) : (
+                    <>
+                      🔀 Sắp xếp ngẫu nhiên
+                    </>
+                  )}
+                </button>
+                <button
+                  onClick={() => setShowAddProduct(!showAddProduct)}
+                  className="flex items-center gap-2 px-4 py-2 bg-black text-white rounded-lg hover:bg-gray-800 transition-colors"
+                >
+                  <Plus className="w-4 h-4" />
+                  Thêm sản phẩm
+                </button>
+              </div>
             </div>
 
             {/* Add Product Form */}
             {showAddProduct && (
               <div className="bg-white rounded-lg border border-gray-200 p-6">
-                <h3 className="text-lg font-semibold mb-4">Thêm sản phẩm mới</h3>
+                <h3 className="text-lg font-semibold mb-4">
+                  {editingProductId ? "Chỉnh sửa sản phẩm" : "Thêm sản phẩm mới"}
+                </h3>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -594,17 +769,47 @@ export default function AdminDashboard() {
                   </div>
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Danh mục
+                      Đối tượng (Main Category) *
                     </label>
-                    <input
-                      type="text"
-                      value={newProduct.category}
+                    <select
+                      value={newProduct.main_category}
                       onChange={(e) =>
-                        setNewProduct({ ...newProduct, category: e.target.value })
+                        setNewProduct({ ...newProduct, main_category: e.target.value })
                       }
                       className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none"
-                      placeholder="Sweater, T-Shirt, etc."
-                    />
+                    >
+                      <option value="">Chọn đối tượng</option>
+                      <option value="Nam">Nam (Men)</option>
+                      <option value="Nữ">Nữ (Women)</option>
+                      <option value="Trẻ em">Trẻ em (Kids)</option>
+                      <option value="Unisex">Unisex</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Danh mục con (Sub-Category)
+                    </label>
+                    <div className="relative">
+                      <input
+                        type="text"
+                        list="category-suggestions"
+                        value={newProduct.category}
+                        onChange={(e) =>
+                          setNewProduct({ ...newProduct, category: e.target.value })
+                        }
+                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                        placeholder="T-Shirt, Hoodie, etc."
+                      />
+                      <datalist id="category-suggestions">
+                        {categories.map((cat) => (
+                          <option key={cat} value={cat} />
+                        ))}
+                      </datalist>
+                    </div>
+                    <p className="text-xs text-gray-500 mt-1">
+                      Gợi ý: {categories.slice(0, 5).join(", ")}
+                      {categories.length > 5 && "..."} hoặc nhập mới
+                    </p>
                   </div>
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -676,16 +881,31 @@ export default function AdminDashboard() {
                       <span className="text-sm font-medium text-gray-700">Đã xuất bản</span>
                     </label>
                   </div>
+                  <div>
+                    <label className="flex items-center gap-2">
+                      <input
+                        type="checkbox"
+                        checked={newProduct.is_featured}
+                        onChange={(e) =>
+                          setNewProduct({ ...newProduct, is_featured: e.target.checked })
+                        }
+                        className="w-4 h-4"
+                      />
+                      <span className="text-sm font-medium text-gray-700">
+                        Show on Home Page (Feature Product)
+                      </span>
+                    </label>
+                  </div>
                 </div>
                 <div className="flex gap-3 mt-6">
                   <button
                     onClick={handleAddProduct}
                     className="px-6 py-2 bg-black text-white rounded-lg hover:bg-gray-800 transition-colors"
                   >
-                    Thêm sản phẩm
+                    {editingProductId ? "Cập nhật sản phẩm" : "Thêm sản phẩm"}
                   </button>
                   <button
-                    onClick={() => setShowAddProduct(false)}
+                    onClick={handleCancelEdit}
                     className="px-6 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors"
                   >
                     Hủy
@@ -897,13 +1117,22 @@ export default function AdminDashboard() {
                             </span>
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap text-sm">
-                            <button
-                              onClick={() => handleDeleteProduct(product.id!)}
-                              className="text-red-600 hover:text-red-800 flex items-center gap-1"
-                            >
-                              <Trash2 className="w-4 h-4" />
-                              Xóa
-                            </button>
+                            <div className="flex items-center gap-3">
+                              <button
+                                onClick={() => handleEditProduct(product)}
+                                className="text-blue-600 hover:text-blue-800 flex items-center gap-1"
+                              >
+                                <Edit2 className="w-4 h-4" />
+                                Sửa
+                              </button>
+                              <button
+                                onClick={() => handleDeleteProduct(product.id!)}
+                                className="text-red-600 hover:text-red-800 flex items-center gap-1"
+                              >
+                                <Trash2 className="w-4 h-4" />
+                                Xóa
+                              </button>
+                            </div>
                           </td>
                         </tr>
                       ))}

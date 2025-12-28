@@ -11,6 +11,7 @@ export interface Product {
   affiliate_link?: string;
   tags?: string[];
   is_published?: boolean;
+  is_featured?: boolean;
   created_at?: string;
   updated_at?: string;
 }

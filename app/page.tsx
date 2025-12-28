@@ -7,22 +7,78 @@ import { Product } from "@/types/product";
 import ProductCard from "@/components/ProductCard";
 import Header from "@/components/Header";
 
-async function getAllProducts(): Promise<Product[]> {
+async function getFeaturedProducts(searchQuery?: string): Promise<Product[]> {
   try {
-    const { data, error } = await supabase
+    let query = supabase
       .from("products")
       .select("*")
       .eq("is_published", true)
-      .order("created_at", { ascending: false });
+      .eq("is_featured", true);
+
+    // Apply fuzzy search if search query is provided
+    if (searchQuery && searchQuery.trim()) {
+      const searchTerm = searchQuery.trim();
+      
+      // Search in title, description, and main_category using .or() and .ilike()
+      // Format: column.ilike.%value% for partial matching
+      query = query.or(
+        `title.ilike.%${searchTerm}%,description.ilike.%${searchTerm}%,main_category.ilike.%${searchTerm}%`
+      );
+
+      // Tags search will be handled in JavaScript after fetching
+    }
+
+    const { data, error } = await query.order("sort_order", { ascending: false });
 
     if (error) {
-      console.error("Error fetching products:", error);
+      console.error("Error fetching featured products:", error);
       return [];
     }
 
-    return data || [];
+    let products = data || [];
+
+    // Additional search for tags if search query exists
+    // Since Supabase .or() already handled title/description/main_category,
+    // we now check tags and add any matching products that weren't already included
+    if (searchQuery && searchQuery.trim()) {
+      const searchLower = searchQuery.trim().toLowerCase();
+      
+      // Fetch products that match tags (if not already in results)
+      try {
+        const { data: tagProducts, error: tagError } = await supabase
+          .from("products")
+          .select("*")
+          .eq("is_published", true)
+          .eq("is_featured", true);
+
+        if (!tagError && tagProducts) {
+          // Find products with matching tags that aren't already in results
+          const existingIds = new Set(products.map((p) => p.id));
+          const tagMatches = tagProducts.filter((product) => {
+            // Skip if already in results
+            if (existingIds.has(product.id)) return false;
+            
+            // Check if tags match
+            if (product.tags && product.tags.length > 0) {
+              return product.tags.some((tag) =>
+                tag.toLowerCase().includes(searchLower)
+              );
+            }
+            return false;
+          });
+          
+          // Combine results
+          products = [...products, ...tagMatches];
+        }
+      } catch (tagSearchError) {
+        console.error("Error searching tags:", tagSearchError);
+        // Continue with existing results if tag search fails
+      }
+    }
+
+    return products;
   } catch (error) {
-    console.error("Error fetching products:", error);
+    console.error("Error fetching featured products:", error);
     return [];
   }
 }
@@ -32,15 +88,8 @@ export default async function Home({
 }: {
   searchParams: { search?: string };
 }) {
-  const allProducts = await getAllProducts();
   const searchQuery = searchParams.search || "";
-  
-  // Filter products based on search query (case-insensitive)
-  const filteredProducts = searchQuery
-    ? allProducts.filter((product) =>
-        product.title.toLowerCase().includes(searchQuery.toLowerCase())
-      )
-    : allProducts.slice(0, 6); // Show first 6 as featured if no search
+  const featuredProducts = await getFeaturedProducts(searchQuery);
   return (
     <div className="min-h-screen bg-white">
       <Header />
@@ -69,9 +118,9 @@ export default async function Home({
           {searchQuery ? `Kết quả tìm kiếm cho "${searchQuery}"` : "Sản Phẩm Nổi Bật"}
         </h2>
         
-        {filteredProducts.length > 0 ? (
+        {featuredProducts.length > 0 ? (
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            {filteredProducts.map((product, index) => (
+            {featuredProducts.map((product, index) => (
               <ProductCard key={product.id || product.slug} product={product} index={index} />
             ))}
           </div>

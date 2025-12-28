@@ -15,7 +15,7 @@ async function getProductsByTag(tag: string): Promise<Product[]> {
       .from("products")
       .select("*")
       .eq("is_published", true)
-      .order("created_at", { ascending: false });
+      .order("sort_order", { ascending: false });
 
     if (error) {
       console.error("Error fetching products by tag:", error);
