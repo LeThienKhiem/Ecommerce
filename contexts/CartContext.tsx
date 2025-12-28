@@ -6,6 +6,7 @@ import { Product } from "@/types/product";
 interface CartItem {
   product: Product;
   quantity: number;
+  size?: string;
 }
 
 interface AddToCartResult {
@@ -15,9 +16,9 @@ interface AddToCartResult {
 
 interface CartContextType {
   cart: CartItem[];
-  addToCart: (product: Product, quantity?: number) => AddToCartResult;
-  removeFromCart: (productId: number | string) => void;
-  updateQuantity: (productId: number | string, quantity: number) => void;
+  addToCart: (product: Product, quantity?: number, size?: string) => AddToCartResult;
+  removeFromCart: (productId: number | string, size?: string) => void;
+  updateQuantity: (productId: number | string, quantity: number, size?: string) => void;
   clearCart: () => void;
   getTotalItems: () => number;
   getTotalPrice: () => number;
@@ -66,24 +67,24 @@ export function CartProvider({ children }: { children: ReactNode }) {
     };
   }, [cart, mounted]);
 
-  const addToCart = (product: Product, quantity: number = 1): AddToCartResult => {
+  const addToCart = (product: Product, quantity: number = 1, size?: string): AddToCartResult => {
     // Check if product is affiliate (no stock management)
     if (product.affiliate_link) {
       // Affiliate products can always be added (no stock check)
       setCart((prevCart) => {
         const existingItem = prevCart.find(
-          (item) => item.product.id === product.id || item.product.slug === product.slug
+          (item) => (item.product.id === product.id || item.product.slug === product.slug) && item.size === size
         );
 
         if (existingItem) {
           return prevCart.map((item) =>
-            (item.product.id === product.id || item.product.slug === product.slug)
+            (item.product.id === product.id || item.product.slug === product.slug) && item.size === size
               ? { ...item, quantity: item.quantity + quantity }
               : item
           );
         }
 
-        return [...prevCart, { product, quantity }];
+        return [...prevCart, { product, quantity, size }];
       });
       return { success: true };
     }
@@ -103,7 +104,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
 
     setCart((prevCart) => {
       const existingItem = prevCart.find(
-        (item) => item.product.id === product.id || item.product.slug === product.slug
+        (item) => (item.product.id === product.id || item.product.slug === product.slug) && item.size === size
       );
 
       if (existingItem) {
@@ -114,7 +115,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
           return prevCart; // Don't update
         }
         return prevCart.map((item) =>
-          (item.product.id === product.id || item.product.slug === product.slug)
+          (item.product.id === product.id || item.product.slug === product.slug) && item.size === size
             ? { ...item, quantity: newQuantity }
             : item
         );
@@ -127,7 +128,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
         return prevCart; // Don't add
       }
 
-      return [...prevCart, { product, quantity }];
+      return [...prevCart, { product, quantity, size }];
     });
 
     if (stockValidationFailed) {
@@ -140,24 +141,30 @@ export function CartProvider({ children }: { children: ReactNode }) {
     return { success: true };
   };
 
-  const removeFromCart = (productId: number | string) => {
+  const removeFromCart = (productId: number | string, size?: string) => {
     setCart((prevCart) =>
       prevCart.filter(
-        (item) =>
-          item.product.id !== productId && item.product.slug !== productId
+        (item) => {
+          const matchesProduct = item.product.id === productId || item.product.slug === productId;
+          const matchesSize = size === undefined || item.size === size;
+          return !(matchesProduct && matchesSize);
+        }
       )
     );
   };
 
-  const updateQuantity = (productId: number | string, quantity: number) => {
+  const updateQuantity = (productId: number | string, quantity: number, size?: string) => {
     if (quantity <= 0) {
-      removeFromCart(productId);
+      removeFromCart(productId, size);
       return;
     }
 
     setCart((prevCart) =>
       prevCart.map((item) => {
-        if (item.product.id === productId || item.product.slug === productId) {
+        const matchesProduct = item.product.id === productId || item.product.slug === productId;
+        const matchesSize = size === undefined || item.size === size;
+        
+        if (matchesProduct && matchesSize) {
           // Check stock for direct sale products
           if (!item.product.affiliate_link && item.product.stock !== undefined) {
             const availableStock = item.product.stock;

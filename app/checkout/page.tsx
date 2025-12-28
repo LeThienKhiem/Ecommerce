@@ -125,6 +125,7 @@ export default function CheckoutPage() {
           slug: item.product.slug,
           price: item.product.price_selling,
           quantity: item.quantity,
+          size: item.size || null,
           subtotal: (item.product.price_selling || 0) * item.quantity,
         })),
       };
@@ -151,6 +152,30 @@ export default function CheckoutPage() {
       }
 
       console.log("Insert successful, returned data:", data);
+
+      // Save order items to order_items table
+      if (data && data.length > 0) {
+        const orderId = data[0].id;
+        const orderItems = cart.map((item) => ({
+          order_id: orderId,
+          product_id: item.product.id,
+          title: item.product.title,
+          slug: item.product.slug,
+          price: item.product.price_selling,
+          quantity: item.quantity,
+          size: item.size || null,
+          subtotal: (item.product.price_selling || 0) * item.quantity,
+        }));
+
+        const { error: orderItemsError } = await supabase
+          .from("order_items")
+          .insert(orderItems);
+
+        if (orderItemsError) {
+          console.error("Error saving order items:", orderItemsError);
+          // Don't fail the order if order_items insert fails, but log it
+        }
+      }
 
       // Save/Update user profile (if logged in)
       if (userId) {
@@ -399,7 +424,14 @@ export default function CheckoutPage() {
                         )}
                       </div>
                       <div className="flex-1 min-w-0">
-                        <h3 className="text-sm font-medium text-gray-900 truncate">{item.product.title}</h3>
+                        <h3 className="text-sm font-medium text-gray-900 truncate">
+                          {item.product.title}
+                          {item.size && (
+                            <span className="text-xs font-normal text-gray-500 ml-1">
+                              (Size: {item.size})
+                            </span>
+                          )}
+                        </h3>
                         <p className="text-xs text-gray-500">SL: {item.quantity}</p>
                         <p className="text-sm font-medium">{(item.product.price_selling! / 1000).toFixed(0)}k ₫</p>
                       </div>

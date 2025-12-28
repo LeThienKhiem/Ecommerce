@@ -14,11 +14,11 @@ export default function CartPage() {
   const shipping = 0; // Free shipping
   const finalTotal = totalPrice + shipping;
 
-  const handleQuantityChange = (productId: number | string, newQuantity: number) => {
+  const handleQuantityChange = (productId: number | string, newQuantity: number, size?: string) => {
     if (newQuantity < 1) {
-      removeFromCart(productId);
+      removeFromCart(productId, size);
     } else {
-      updateQuantity(productId, newQuantity);
+      updateQuantity(productId, newQuantity, size);
     }
   };
 
@@ -87,7 +87,7 @@ export default function CartPage() {
 
               return (
                 <div
-                  key={item.product.id || item.product.slug}
+                  key={`${item.product.id || item.product.slug}-${item.size || 'no-size'}`}
                   className="bg-white border border-gray-200 rounded-lg p-6"
                 >
                   <div className="flex flex-col sm:flex-row gap-4">
@@ -117,6 +117,11 @@ export default function CartPage() {
                       >
                         <h3 className="text-lg font-medium text-apple-gray-900 mb-2 hover:text-apple-blue transition-colors">
                           {item.product.title}
+                          {item.size && (
+                            <span className="text-sm font-normal text-gray-500 ml-2">
+                              (Size: {item.size})
+                            </span>
+                          )}
                         </h3>
                       </Link>
 
@@ -130,7 +135,8 @@ export default function CartPage() {
                           <button
                             onClick={() => handleQuantityChange(
                               item.product.id || item.product.slug,
-                              item.quantity - 1
+                              item.quantity - 1,
+                              item.size
                             )}
                             className="w-8 h-8 rounded-full border border-gray-300 flex items-center justify-center hover:bg-gray-50 transition-colors"
                           >
@@ -142,7 +148,8 @@ export default function CartPage() {
                           <button
                             onClick={() => handleQuantityChange(
                               item.product.id || item.product.slug,
-                              item.quantity + 1
+                              item.quantity + 1,
+                              item.size
                             )}
                             className="w-8 h-8 rounded-full border border-gray-300 flex items-center justify-center hover:bg-gray-50 transition-colors"
                           >
@@ -156,7 +163,7 @@ export default function CartPage() {
                           Tạm tính: <span className="font-medium text-apple-gray-900">{(itemTotal / 1000).toFixed(0)}k VND</span>
                         </span>
                         <button
-                          onClick={() => removeFromCart(item.product.id || item.product.slug)}
+                          onClick={() => removeFromCart(item.product.id || item.product.slug, item.size)}
                           className="text-red-500 hover:text-red-600 transition-colors flex items-center gap-1 text-sm"
                         >
                           <Trash2 className="h-4 w-4" />

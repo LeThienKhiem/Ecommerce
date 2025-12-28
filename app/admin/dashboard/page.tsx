@@ -45,6 +45,7 @@ export default function AdminDashboard() {
     affiliate_link: "",
     stock: "",
     product_type: "affiliate" as "affiliate" | "direct_sale",
+    sizes: "",
     tags: "",
     is_published: true,
     is_featured: true,
@@ -161,6 +162,7 @@ export default function AdminDashboard() {
       affiliate_link: product.affiliate_link || "",
       stock: product.stock?.toString() || "",
       product_type: productType,
+      sizes: product.sizes?.join(", ") || "",
       tags: product.tags?.join(", ") || "",
       is_published: product.is_published ?? true,
       is_featured: product.is_featured ?? true,
@@ -184,6 +186,7 @@ export default function AdminDashboard() {
         affiliate_link: "",
         stock: "",
         product_type: "affiliate",
+        sizes: "",
         tags: "",
         is_published: true,
         is_featured: true,
@@ -213,6 +216,7 @@ export default function AdminDashboard() {
         main_category: newProduct.main_category || null,
         category: newProduct.category || null,
         source_url: newProduct.source_url || null,
+        sizes: newProduct.sizes ? newProduct.sizes.split(",").map((size) => size.trim()).filter((size) => size.length > 0) : [],
         tags: newProduct.tags ? newProduct.tags.split(",").map((tag) => tag.trim()).filter((tag) => tag.length > 0) : [],
         is_published: newProduct.is_published,
         is_featured: newProduct.is_featured,
@@ -432,6 +436,12 @@ export default function AdminDashboard() {
             : String(product.tags).split(",").map((tag: string) => tag.trim()).filter((tag: string) => tag.length > 0)
           : [];
 
+        const sizes = product.sizes
+          ? Array.isArray(product.sizes)
+            ? product.sizes.map((size: any) => String(size).trim()).filter((size: string) => size.length > 0)
+            : String(product.sizes).split(",").map((size: string) => size.trim()).filter((size: string) => size.length > 0)
+          : [];
+
         // Determine product type from affiliate_link
         const hasAffiliateLink = product.affiliate_link && String(product.affiliate_link).trim().length > 0;
         
@@ -445,6 +455,7 @@ export default function AdminDashboard() {
           main_category: product.main_category ? String(product.main_category).trim() : null,
           category: product.category ? String(product.category).trim() : null,
           source_url: product.source_url ? String(product.source_url).trim() : null,
+          sizes: sizes,
           tags: tags,
           is_published: product.is_published !== undefined ? Boolean(product.is_published) : true,
           is_featured: product.is_featured !== undefined ? Boolean(product.is_featured) : true,
@@ -996,6 +1007,26 @@ export default function AdminDashboard() {
                       />
                     </div>
                   )}
+
+                  {/* Size Input */}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Kích thước / Size
+                    </label>
+                    <input
+                      type="text"
+                      value={newProduct.sizes}
+                      onChange={(e) =>
+                        setNewProduct({ ...newProduct, sizes: e.target.value })
+                      }
+                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                      placeholder="S, M, L, XL hoặc 38, 39, 40"
+                    />
+                    <p className="text-xs text-gray-500 mt-1">
+                      Phân cách các size bằng dấu phẩy
+                    </p>
+                  </div>
+
                   <div className="md:col-span-2">
                     <label className="block text-sm font-medium text-gray-700 mb-1">
                       Tags (phân cách bằng dấu phẩy)

@@ -8,7 +8,7 @@ import { ArrowLeft } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import { Product } from "@/types/product";
 import Header from "@/components/Header";
-import AddToCartButton from "@/components/AddToCartButton";
+import ProductDetailActions from "@/components/ProductDetailActions";
 import ProductImageGallery from "@/components/ProductImageGallery";
 
 async function getProductBySlug(slug: string): Promise<Product | null> {
@@ -211,31 +211,8 @@ export default async function ProductDetailPage({
               </div>
             )}
 
-            {/* Action Buttons */}
-            <div className="space-y-3 pt-6">
-              {product.affiliate_link ? (
-                <a
-                  href={product.affiliate_link}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="w-full bg-apple-blue text-white py-3 rounded-full hover:bg-blue-600 transition-colors font-medium text-center block"
-                >
-                  Mua ngay trên Shopee
-                </a>
-              ) : (
-                <>
-                  <AddToCartButton product={product} />
-                  {product.stock !== undefined && product.stock > 0 && (
-                    <Link
-                      href="/checkout"
-                      className="w-full flex items-center justify-center gap-2 border border-gray-300 text-apple-gray-900 py-3 rounded-full hover:bg-gray-50 transition-colors font-medium text-sm"
-                    >
-                      Thanh Toán
-                    </Link>
-                  )}
-                </>
-              )}
-            </div>
+            {/* Size Selection & Action Buttons */}
+            <ProductDetailActions product={product} />
 
             {/* Product Info Table */}
             <div className="border-t border-gray-200 pt-6 space-y-4">

@@ -9,9 +9,11 @@ import Toast from "./Toast";
 interface AddToCartButtonProps {
   product: Product;
   className?: string;
+  selectedSize?: string | null;
+  onBeforeAdd?: () => boolean;
 }
 
-export default function AddToCartButton({ product, className = "" }: AddToCartButtonProps) {
+export default function AddToCartButton({ product, className = "", selectedSize, onBeforeAdd }: AddToCartButtonProps) {
   const [isAdding, setIsAdding] = useState(false);
   const [showToast, setShowToast] = useState(false);
   const [toastMessage, setToastMessage] = useState("");
@@ -23,6 +25,11 @@ export default function AddToCartButton({ product, className = "" }: AddToCartBu
   const isOutOfStock = !product.affiliate_link && (product.stock === undefined || product.stock <= 0);
 
   const handleAddToCart = () => {
+    // Call onBeforeAdd callback if provided (for size validation)
+    if (onBeforeAdd && !onBeforeAdd()) {
+      return;
+    }
+
     // Don't allow adding out of stock items
     if (isOutOfStock) {
       setToastMessage(lang === "vi" ? "Sản phẩm đã hết hàng" : "Product is out of stock");
@@ -36,7 +43,7 @@ export default function AddToCartButton({ product, className = "" }: AddToCartBu
     }
     
     setIsAdding(true);
-    const result = addToCart(product);
+    const result = addToCart(product, 1, selectedSize || undefined);
     
     if (!result.success) {
       // Stock validation failed

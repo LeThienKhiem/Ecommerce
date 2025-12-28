@@ -10,6 +10,7 @@ export interface Product {
   source_url?: string;
   affiliate_link?: string;
   stock?: number;
+  sizes?: string[];
   tags?: string[];
   is_published?: boolean;
   is_featured?: boolean;
