@@ -53,14 +53,14 @@ async function getFeaturedProducts(searchQuery?: string): Promise<Product[]> {
 
         if (!tagError && tagProducts) {
           // Find products with matching tags that aren't already in results
-          const existingIds = new Set(products.map((p) => p.id));
-          const tagMatches = tagProducts.filter((product) => {
+          const existingIds = new Set(products.map((p: Product) => p.id));
+          const tagMatches = tagProducts.filter((product: Product) => {
             // Skip if already in results
             if (existingIds.has(product.id)) return false;
             
             // Check if tags match
             if (product.tags && product.tags.length > 0) {
-              return product.tags.some((tag) =>
+              return product.tags.some((tag: string) =>
                 tag.toLowerCase().includes(searchLower)
               );
             }
@@ -120,7 +120,7 @@ export default async function Home({
         
         {featuredProducts.length > 0 ? (
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            {featuredProducts.map((product, index) => (
+            {featuredProducts.map((product: Product, index: number) => (
               <ProductCard key={product.id || product.slug} product={product} index={index} />
             ))}
           </div>
