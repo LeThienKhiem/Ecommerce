@@ -7,7 +7,7 @@ import Toast from "@/components/Toast";
 import { useLanguage } from "@/contexts/LanguageContext";
 
 export default function WholesalePage() {
-  const { t } = useLanguage();
+  const { t, lang } = useLanguage();
   const [formData, setFormData] = useState({
     name: "",
     phone: "",
@@ -129,7 +129,7 @@ export default function WholesalePage() {
               disabled={isSubmitting}
               className="w-full bg-apple-blue text-white py-3 rounded-lg hover:bg-blue-600 transition-colors font-medium disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              {isSubmitting ? (t.lang === "vi" ? "Đang gửi..." : "Submitting...") : t.wholesale_submit}
+              {isSubmitting ? (lang === "vi" ? "Đang gửi..." : "Submitting...") : t.wholesale_submit}
             </button>
           </form>
         </div>
