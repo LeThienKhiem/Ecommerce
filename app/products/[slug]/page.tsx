@@ -2,6 +2,7 @@ export const dynamic = 'force-dynamic';
 export const revalidate = 0;
 
 import { notFound } from "next/navigation";
+import { Metadata } from "next";
 import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
 import { supabase } from "@/lib/supabase";
@@ -28,6 +29,53 @@ async function getProductBySlug(slug: string): Promise<Product | null> {
     console.error("Error fetching product:", error);
     return null;
   }
+}
+
+export async function generateMetadata({
+  params,
+}: {
+  params: { slug: string };
+}): Promise<Metadata> {
+  const product = await getProductBySlug(params.slug);
+
+  if (!product) {
+    return {
+      title: "Product Not Found",
+    };
+  }
+
+  const baseUrl = 'https://kilolook.com';
+  const productUrl = `${baseUrl}/products/${product.slug}`;
+  const mainImage = product.images && product.images.length > 0 
+    ? product.images[0] 
+    : null;
+  const productImage = mainImage 
+    ? (mainImage.startsWith('http') ? mainImage : `${baseUrl}${mainImage.startsWith('/') ? mainImage : `/${mainImage}`}`)
+    : undefined;
+
+  // Map tags array to keywords meta tag
+  const keywords = product.tags && product.tags.length > 0
+    ? product.tags.join(", ")
+    : undefined;
+
+  return {
+    title: product.title,
+    description: product.description || product.title,
+    keywords: keywords,
+    openGraph: {
+      title: product.title,
+      description: product.description || product.title,
+      url: productUrl,
+      images: productImage ? [productImage] : [],
+      type: "website",
+    },
+    twitter: {
+      card: "summary_large_image",
+      title: product.title,
+      description: product.description || product.title,
+      images: productImage ? [productImage] : [],
+    },
+  };
 }
 
 export default async function ProductDetailPage({
@@ -157,24 +205,9 @@ export default async function ProductDetailPage({
                 <h2 className="text-xl font-semibold text-apple-gray-900">
                   Mô Tả
                 </h2>
-                <p className="text-gray-600 leading-relaxed">
+                <p className="text-gray-600 leading-relaxed whitespace-pre-line">
                   {product.description}
                 </p>
-              </div>
-            )}
-
-            {/* Tags */}
-            {product.tags && product.tags.length > 0 && (
-              <div className="flex flex-wrap gap-2">
-                {product.tags.map((tag, index) => (
-                  <Link
-                    key={index}
-                    href={`/tags/${encodeURIComponent(tag)}`}
-                    className="inline-block px-3 py-1 text-sm bg-gray-100 text-gray-700 rounded-full hover:bg-apple-blue hover:text-white transition-colors"
-                  >
-                    #{tag}
-                  </Link>
-                ))}
               </div>
             )}
 
@@ -222,6 +255,23 @@ export default async function ProductDetailPage({
                 )}
               </div>
             </div>
+
+            {/* Tags - Minimal Footer Style */}
+            {product.tags && product.tags.length > 0 && (
+              <div className="mt-8 border-t border-gray-100 pt-4">
+                <div className="flex flex-wrap gap-2">
+                  {product.tags.map((tag, index) => (
+                    <Link
+                      key={index}
+                      href={`/tags/${encodeURIComponent(tag)}`}
+                      className="text-xs text-gray-400 hover:text-gray-600 transition-colors"
+                    >
+                      #{tag}
+                    </Link>
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
         </div>
       </main>

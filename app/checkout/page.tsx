@@ -1,12 +1,13 @@
 "use client";
 
-import { useState, FormEvent } from "react";
+import { useState, FormEvent, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
-import { ArrowLeft, CheckCircle2, CreditCard, Truck } from "lucide-react"; // Thêm icon cho đẹp
+import { ArrowLeft, CheckCircle2, CreditCard, Truck } from "lucide-react";
 import { useCart } from "@/contexts/CartContext";
 import Header from "@/components/Header";
+import Toast from "@/components/Toast";
 import { supabase } from "@/lib/supabase";
 
 type PaymentMethod = "local_transfer" | "cod";
@@ -21,11 +22,75 @@ export default function CheckoutPage() {
     phone: "",
     address: "",
   });
+  const [isLoadingProfile, setIsLoadingProfile] = useState(true);
+  const [showProfileSavedToast, setShowProfileSavedToast] = useState(false);
+  const [userId, setUserId] = useState<string | null>(null);
+  const redirectTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   const totalPrice = getTotalPrice();
   const totalItems = getTotalItems();
   const shipping = 0; // Free shipping
   const finalTotal = totalPrice + shipping;
+
+  // Auto-fill profile data on load
+  useEffect(() => {
+    const loadUserProfile = async () => {
+      try {
+        // Check if user is logged in
+        const { data: { user }, error: authError } = await supabase.auth.getUser();
+        
+        if (authError || !user) {
+          // User is not logged in (guest) - leave fields empty
+          setIsLoadingProfile(false);
+          return;
+        }
+
+        setUserId(user.id);
+
+        // Fetch profile data from profiles table
+        const { data: profile, error: profileError } = await supabase
+          .from("profiles")
+          .select("full_name, phone, address")
+          .eq("id", user.id)
+          .single();
+
+        if (profileError) {
+          // If profile doesn't exist (PGRST116), that's okay - user can fill manually
+          // PGRST116 = no rows returned
+          if (profileError.code !== "PGRST116") {
+            console.error("Error fetching profile:", profileError);
+          }
+          setIsLoadingProfile(false);
+          return;
+        }
+
+        // Auto-fill form with profile data
+        if (profile) {
+          setFormData({
+            name: profile.full_name || "",
+            phone: profile.phone || "",
+            address: profile.address || "",
+          });
+        }
+      } catch (error) {
+        console.error("Error loading user profile:", error);
+        // Ensure loading state is cleared even on unexpected errors
+      } finally {
+        setIsLoadingProfile(false);
+      }
+    };
+
+    loadUserProfile();
+  }, []);
+
+  // Cleanup timeout on unmount
+  useEffect(() => {
+    return () => {
+      if (redirectTimeoutRef.current) {
+        clearTimeout(redirectTimeoutRef.current);
+      }
+    };
+  }, []);
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
@@ -87,10 +152,47 @@ export default function CheckoutPage() {
 
       console.log("Insert successful, returned data:", data);
 
+      // Save/Update user profile (if logged in)
+      if (userId) {
+        try {
+          const { error: profileError } = await supabase
+            .from("profiles")
+            .upsert({
+              id: userId,
+              full_name: formData.name.trim(),
+              phone: formData.phone.trim(),
+              address: formData.address.trim(),
+            }, {
+              onConflict: "id"
+            });
+
+          if (profileError) {
+            console.error("Error saving profile:", profileError);
+            // Don't block order success if profile save fails
+          } else {
+            // Show success toast
+            setShowProfileSavedToast(true);
+          }
+        } catch (profileSaveError) {
+          console.error("Error saving profile:", profileSaveError);
+          // Continue with order success even if profile save fails
+        }
+      }
+
       // 3. Thành công
       console.log("Order placed successfully:", data);
       clearCart(); // Xóa giỏ hàng
-      router.push("/success"); // Chuyển trang
+      
+      // Small delay to show toast before redirect
+      // Clear any existing timeout first
+      if (redirectTimeoutRef.current) {
+        clearTimeout(redirectTimeoutRef.current);
+      }
+      
+      redirectTimeoutRef.current = setTimeout(() => {
+        router.push("/success"); // Chuyển trang
+        redirectTimeoutRef.current = null;
+      }, userId ? 1500 : 0); // Show toast for 1.5s if profile was saved
 
     } catch (error: any) {
       console.error("Lỗi khi đặt hàng:", error);
@@ -147,8 +249,9 @@ export default function CheckoutPage() {
                     required
                     value={formData.name}
                     onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none"
-                    placeholder="Nguyễn Văn A"
+                    disabled={isLoadingProfile}
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none disabled:bg-gray-100 disabled:cursor-wait"
+                    placeholder={isLoadingProfile ? "Đang tải..." : "Nguyễn Văn A"}
                   />
                 </div>
                 <div>
@@ -158,8 +261,9 @@ export default function CheckoutPage() {
                     required
                     value={formData.phone}
                     onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none"
-                    placeholder="0912345678"
+                    disabled={isLoadingProfile}
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none disabled:bg-gray-100 disabled:cursor-wait"
+                    placeholder={isLoadingProfile ? "Đang tải..." : "0912345678"}
                   />
                 </div>
                 <div>
@@ -169,8 +273,9 @@ export default function CheckoutPage() {
                     rows={3}
                     value={formData.address}
                     onChange={(e) => setFormData({ ...formData, address: e.target.value })}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none resize-none"
-                    placeholder="Số nhà, tên đường, phường/xã, quận/huyện..."
+                    disabled={isLoadingProfile}
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none resize-none disabled:bg-gray-100 disabled:cursor-wait"
+                    placeholder={isLoadingProfile ? "Đang tải..." : "Số nhà, tên đường, phường/xã, quận/huyện..."}
                   />
                 </div>
               </div>
@@ -259,6 +364,14 @@ export default function CheckoutPage() {
               )}
             </button>
           </div>
+
+          {/* Toast for profile saved */}
+          <Toast
+            message="Thông tin của bạn đã được lưu cho lần sau"
+            isVisible={showProfileSavedToast}
+            onClose={() => setShowProfileSavedToast(false)}
+            type="success"
+          />
 
           {/* CỘT PHẢI: Tóm tắt đơn hàng */}
           <div className="lg:col-span-1">

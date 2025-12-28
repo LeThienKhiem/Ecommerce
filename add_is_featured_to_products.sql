@@ -18,3 +18,5 @@ UPDATE products SET is_featured = true WHERE is_featured IS NULL;
 -- Add comment
 COMMENT ON COLUMN products.is_featured IS 'Whether the product should be shown on the home page';
 
+
+

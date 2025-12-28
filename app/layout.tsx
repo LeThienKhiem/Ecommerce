@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import "./globals.css";
 import { CartProvider } from "@/contexts/CartContext";
 import { SearchProvider } from "@/contexts/SearchContext";
+import { LanguageProvider } from "@/contexts/LanguageContext";
 
 export const metadata: Metadata = {
   title: "Kilolook Store",
@@ -16,11 +17,13 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className="antialiased">
-        <CartProvider>
-          <SearchProvider>
-            {children}
-          </SearchProvider>
-        </CartProvider>
+        <LanguageProvider>
+          <CartProvider>
+            <SearchProvider>
+              {children}
+            </SearchProvider>
+          </CartProvider>
+        </LanguageProvider>
       </body>
     </html>
   );

@@ -16,3 +16,5 @@ END $$;
 COMMENT ON COLUMN products.affiliate_link IS 'Affiliate link for external purchase (if provided, product will use affiliate mode instead of dropshipping)';
 
 
+
+

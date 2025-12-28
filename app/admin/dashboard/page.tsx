@@ -1,19 +1,21 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
-import { LogOut, Package, ShoppingBag, Plus, Trash2, CheckCircle2, Upload, FileText, FileSpreadsheet, Edit2 } from "lucide-react";
+import { LogOut, Package, ShoppingBag, Plus, Trash2, CheckCircle2, Upload, FileText, FileSpreadsheet, Edit2, Users } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import { Product } from "@/types/product";
 import { Order } from "@/types/order";
+import { WholesaleContact } from "@/types/wholesale";
 import { generateSlug } from "@/lib/utils";
 import Papa from "papaparse";
 
 export default function AdminDashboard() {
   const router = useRouter();
-  const [activeTab, setActiveTab] = useState<"products" | "orders">("orders");
+  const [activeTab, setActiveTab] = useState<"products" | "orders" | "wholesale">("orders");
   const [products, setProducts] = useState<Product[]>([]);
   const [orders, setOrders] = useState<Order[]>([]);
+  const [wholesaleContacts, setWholesaleContacts] = useState<WholesaleContact[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [showAddProduct, setShowAddProduct] = useState(false);
   const [showBulkImport, setShowBulkImport] = useState(false);
@@ -46,44 +48,8 @@ export default function AdminDashboard() {
     is_featured: true,
   });
 
-  // Check authentication
-  useEffect(() => {
-    const isAuthenticated = sessionStorage.getItem("admin_authenticated");
-    if (isAuthenticated !== "true") {
-      router.push("/admin");
-      return;
-    }
-    fetchData();
-  }, [router]);
-
-  // Filter sub-categories based on selected main_category
-  useEffect(() => {
-    if (newProduct.main_category && allSubCategories.length > 0) {
-      // Try to fetch sub-categories for the selected main_category
-      const fetchFilteredCategories = async () => {
-        const { data } = await supabase
-          .from("products")
-          .select("category")
-          .eq("main_category", newProduct.main_category)
-          .not("category", "is", null);
-
-        if (data) {
-          const filtered = Array.from(
-            new Set(data.map((p) => p.category).filter(Boolean))
-          ) as string[];
-          // If we have filtered results, use them; otherwise show all
-          setCategories(filtered.length > 0 ? filtered.sort() : [...allSubCategories]);
-        }
-      };
-      fetchFilteredCategories();
-    } else {
-      // Show all sub-categories if no main_category selected
-      setCategories([...allSubCategories]);
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [newProduct.main_category]);
-
-  const fetchData = async () => {
+  // Memoize fetchData to prevent infinite loops
+  const fetchData = useCallback(async () => {
     setIsLoading(true);
     try {
       // Fetch products
@@ -118,13 +84,58 @@ export default function AdminDashboard() {
 
       if (ordersError) throw ordersError;
       setOrders(ordersData || []);
+
+      // Fetch wholesale contacts
+      const { data: wholesaleData, error: wholesaleError } = await supabase
+        .from("wholesale_contacts")
+        .select("*")
+        .order("created_at", { ascending: false });
+
+      if (wholesaleError) throw wholesaleError;
+      setWholesaleContacts(wholesaleData || []);
     } catch (error) {
       console.error("Error fetching data:", error);
       alert("Lỗi khi tải dữ liệu: " + (error as Error).message);
     } finally {
       setIsLoading(false);
     }
-  };
+  }, []); // Empty dependency array - fetchData doesn't depend on any props/state
+
+  // Check authentication
+  useEffect(() => {
+    const isAuthenticated = sessionStorage.getItem("admin_authenticated");
+    if (isAuthenticated !== "true") {
+      router.push("/admin");
+      return;
+    }
+    fetchData();
+  }, [router, fetchData]);
+
+  // Filter sub-categories based on selected main_category
+  useEffect(() => {
+    if (newProduct.main_category && allSubCategories.length > 0) {
+      // Try to fetch sub-categories for the selected main_category
+      const fetchFilteredCategories = async () => {
+        const { data } = await supabase
+          .from("products")
+          .select("category")
+          .eq("main_category", newProduct.main_category)
+          .not("category", "is", null);
+
+        if (data) {
+          const filtered = Array.from(
+            new Set(data.map((p) => p.category).filter(Boolean))
+          ) as string[];
+          // If we have filtered results, use them; otherwise show all
+          setCategories(filtered.length > 0 ? filtered.sort() : [...allSubCategories]);
+        }
+      };
+      fetchFilteredCategories();
+    } else {
+      // Show all sub-categories if no main_category selected
+      setCategories([...allSubCategories]);
+    }
+  }, [newProduct.main_category, allSubCategories]); // Fixed: Added allSubCategories to dependencies
 
   const handleLogout = () => {
     sessionStorage.removeItem("admin_authenticated");
@@ -308,6 +319,39 @@ export default function AdminDashboard() {
     } catch (error) {
       console.error("Error updating order status:", error);
       alert("Lỗi khi cập nhật trạng thái: " + (error as Error).message);
+    }
+  };
+
+  const handleUpdateWholesaleStatus = async (id: number, status: "open" | "closed") => {
+    try {
+      const { error } = await supabase
+        .from("wholesale_contacts")
+        .update({ status, updated_at: new Date().toISOString() })
+        .eq("id", id);
+
+      if (error) throw error;
+
+      alert("Cập nhật trạng thái thành công!");
+      fetchData();
+    } catch (error) {
+      console.error("Error updating wholesale status:", error);
+      alert("Lỗi khi cập nhật trạng thái: " + (error as Error).message);
+    }
+  };
+
+  const handleDeleteWholesaleContact = async (id: number) => {
+    if (!confirm("Bạn có chắc chắn muốn xóa liên hệ này?")) return;
+
+    try {
+      const { error } = await supabase.from("wholesale_contacts").delete().eq("id", id);
+
+      if (error) throw error;
+
+      alert("Xóa liên hệ thành công!");
+      fetchData();
+    } catch (error) {
+      console.error("Error deleting wholesale contact:", error);
+      alert("Lỗi khi xóa liên hệ: " + (error as Error).message);
     }
   };
 
@@ -565,6 +609,17 @@ export default function AdminDashboard() {
           >
             <Package className="w-5 h-5 inline mr-2" />
             Sản phẩm ({products.length})
+          </button>
+          <button
+            onClick={() => setActiveTab("wholesale")}
+            className={`px-6 py-3 font-semibold border-b-2 transition-colors ${
+              activeTab === "wholesale"
+                ? "border-black text-black"
+                : "border-transparent text-gray-500 hover:text-gray-700"
+            }`}
+          >
+            <Users className="w-5 h-5 inline mr-2" />
+            Khách Sỉ (Wholesale) ({wholesaleContacts.length})
           </button>
         </div>
 
@@ -1128,6 +1183,103 @@ export default function AdminDashboard() {
                               <button
                                 onClick={() => handleDeleteProduct(product.id!)}
                                 className="text-red-600 hover:text-red-800 flex items-center gap-1"
+                              >
+                                <Trash2 className="w-4 h-4" />
+                                Xóa
+                              </button>
+                            </div>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+
+        {/* Wholesale Tab */}
+        {activeTab === "wholesale" && (
+          <div className="space-y-6">
+            <h2 className="text-xl font-semibold text-gray-900">Quản lý khách sỉ</h2>
+
+            <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
+              {wholesaleContacts.length === 0 ? (
+                <div className="p-12 text-center text-gray-500">Chưa có liên hệ khách sỉ nào</div>
+              ) : (
+                <div className="overflow-x-auto">
+                  <table className="min-w-full divide-y divide-gray-200">
+                    <thead className="bg-gray-50">
+                      <tr>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          Ngày
+                        </th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          Thông tin khách hàng
+                        </th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          Địa chỉ
+                        </th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          Tin nhắn
+                        </th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          Trạng thái
+                        </th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          Thao tác
+                        </th>
+                      </tr>
+                    </thead>
+                    <tbody className="bg-white divide-y divide-gray-200">
+                      {wholesaleContacts.map((contact) => (
+                        <tr
+                          key={contact.id}
+                          className={`hover:bg-gray-50 ${
+                            contact.status === "closed" ? "opacity-60" : ""
+                          }`}
+                        >
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                            {new Date(contact.created_at).toLocaleString("vi-VN")}
+                          </td>
+                          <td className="px-6 py-4 text-sm">
+                            <div className="font-medium text-gray-900">{contact.name}</div>
+                            <div className="text-gray-500">{contact.phone}</div>
+                          </td>
+                          <td className="px-6 py-4 text-sm text-gray-900 max-w-xs">
+                            <div className="line-clamp-2">{contact.address}</div>
+                          </td>
+                          <td className="px-6 py-4 text-sm text-gray-600 max-w-xs">
+                            <div className="line-clamp-2">{contact.message || "-"}</div>
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap">
+                            {contact.status === "closed" ? (
+                              <span className="px-2 py-1 text-xs font-semibold rounded-full bg-green-100 text-green-800">
+                                Done
+                              </span>
+                            ) : (
+                              <span className="px-2 py-1 text-xs font-semibold rounded-full bg-yellow-100 text-yellow-800">
+                                Open
+                              </span>
+                            )}
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm">
+                            <div className="flex items-center gap-3">
+                              {contact.status === "open" && (
+                                <button
+                                  onClick={() => handleUpdateWholesaleStatus(contact.id, "closed")}
+                                  className="text-green-600 hover:text-green-800 flex items-center gap-1"
+                                  title="Đánh dấu đã xử lý"
+                                >
+                                  <CheckCircle2 className="w-4 h-4" />
+                                  Done
+                                </button>
+                              )}
+                              <button
+                                onClick={() => handleDeleteWholesaleContact(contact.id)}
+                                className="text-red-600 hover:text-red-800 flex items-center gap-1"
+                                title="Xóa"
                               >
                                 <Trash2 className="w-4 h-4" />
                                 Xóa

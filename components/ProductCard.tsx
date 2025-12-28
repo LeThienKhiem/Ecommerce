@@ -1,5 +1,6 @@
 "use client";
 
+import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { Product } from "@/types/product";
@@ -11,26 +12,104 @@ interface ProductCardProps {
 }
 
 export default function ProductCard({ product, index }: ProductCardProps) {
-  const imageUrl = product.images && product.images.length > 0 
-    ? product.images[0] 
-    : null;
+  const images = product.images && product.images.length > 0 ? product.images : [];
+  const [currentImageIndex, setCurrentImageIndex] = useState(0);
+  const [isHovered, setIsHovered] = useState(false);
+  const [isVisible, setIsVisible] = useState(false);
+  const cardRef = useRef<HTMLDivElement>(null);
+  const debounceTimerRef = useRef<NodeJS.Timeout | null>(null);
+
   const price = product.price_selling 
     ? (product.price_selling / 1000).toFixed(0) 
     : "0";
 
+  // Detect if mobile device
+  const isMobile = typeof window !== "undefined" && window.innerWidth < 768;
+
+  // Intersection Observer for mobile visibility detection with debounce
+  useEffect(() => {
+    if (!cardRef.current) return;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          // Debounce fast scrolling - delay state update
+          if (debounceTimerRef.current) {
+            clearTimeout(debounceTimerRef.current);
+          }
+          
+          debounceTimerRef.current = setTimeout(() => {
+            setIsVisible(entry.isIntersecting && entry.intersectionRatio >= 0.5);
+          }, 200); // 200ms debounce for fast scrolling
+        });
+      },
+      {
+        threshold: 0.5,
+        rootMargin: "50px", // Start loading slightly before visible
+      }
+    );
+
+    observer.observe(cardRef.current);
+
+    // MANDATORY CLEANUP: Disconnect observer on unmount
+    return () => {
+      if (debounceTimerRef.current) {
+        clearTimeout(debounceTimerRef.current);
+      }
+      observer.disconnect(); // Complete cleanup
+    };
+  }, []);
+
+  // Unified image cycling logic with safety constraints
+  useEffect(() => {
+    let intervalId: NodeJS.Timeout | null = null;
+
+    // Only start if hovering OR (isMobile AND isVisible)
+    if ((isHovered || (isMobile && isVisible)) && images.length > 1) {
+      intervalId = setInterval(() => {
+        setCurrentImageIndex((prev) => (prev + 1) % images.length);
+      }, 1500); // Slow down to 1.5s to save CPU
+    } else {
+      // Reset to first image when not active
+      setCurrentImageIndex(0);
+    }
+
+    // CLEANUP IS MANDATORY - Always clear interval
+    return () => {
+      if (intervalId) {
+        clearInterval(intervalId);
+      }
+    };
+  }, [isHovered, isMobile, isVisible, images.length]); // Do NOT include currentImageIndex here
+
+  const currentImage = images.length > 0 ? images[currentImageIndex] : null;
+
   return (
-    <div className="group">
+    <div className="group" ref={cardRef}>
       {/* Product Image */}
       <Link href={`/products/${product.slug}`}>
-        <div className="aspect-square bg-apple-gray-50 mb-4 overflow-hidden rounded-lg">
-          {imageUrl ? (
-            <Image
-              src={imageUrl}
-              alt={product.title}
-              width={500}
-              height={500}
-              className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-            />
+        <div
+          className="aspect-square bg-apple-gray-50 mb-4 overflow-hidden rounded-lg relative"
+          onMouseEnter={() => setIsHovered(true)}
+          onMouseLeave={() => setIsHovered(false)}
+        >
+          {currentImage ? (
+            <div className="relative w-full h-full">
+              {images.map((image, idx) => (
+                <Image
+                  key={idx}
+                  src={image}
+                  alt={`${product.title} - Image ${idx + 1}`}
+                  width={500}
+                  height={500}
+                  className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-500 ${
+                    idx === currentImageIndex
+                      ? "opacity-100"
+                      : "opacity-0"
+                  }`}
+                />
+              ))}
+            </div>
           ) : (
             <div className="w-full h-full bg-apple-gray-100"></div>
           )}

@@ -24,3 +24,5 @@ ALTER TABLE products ALTER COLUMN sort_order SET DEFAULT EXTRACT(EPOCH FROM NOW(
 -- Add comment
 COMMENT ON COLUMN products.sort_order IS 'Sort order for products (higher = appears first). New items get current timestamp, randomized items get random value < current timestamp';
 
+
+

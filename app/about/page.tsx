@@ -1,61 +1,49 @@
+"use client";
+
 import Link from "next/link";
-import { ShoppingBag, ArrowLeft } from "lucide-react";
+import { ArrowLeft } from "lucide-react";
+import Header from "@/components/Header";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 export default function AboutPage() {
+  const { t, lang } = useLanguage();
+
   return (
     <div className="min-h-screen bg-white">
-      <header className="border-b border-gray-200">
-        <nav className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between h-16">
-            <Link href="/" className="flex items-center space-x-2">
-              <ShoppingBag className="h-6 w-6 text-gray-900" />
-              <span className="text-xl font-semibold text-gray-900">Store</span>
-            </Link>
-            <div className="flex items-center space-x-8">
-              <Link href="/" className="text-gray-900 hover:text-gray-600 transition">
-                Home
-              </Link>
-              <Link href="/products" className="text-gray-900 hover:text-gray-600 transition">
-                Products
-              </Link>
-              <Link href="/about" className="text-gray-900 hover:text-gray-600 transition font-medium">
-                About
-              </Link>
-              <Link href="/contact" className="text-gray-900 hover:text-gray-600 transition">
-                Contact
-              </Link>
-            </div>
-          </div>
-        </nav>
-      </header>
+      <Header />
 
-      <section className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
-        <Link href="/" className="inline-flex items-center text-gray-600 hover:text-gray-900 transition mb-8">
+      <main className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
+        {/* Back Button */}
+        <Link 
+          href="/" 
+          className="inline-flex items-center text-gray-600 hover:text-apple-gray-900 transition-colors mb-8"
+        >
           <ArrowLeft className="h-4 w-4 mr-2" />
-          Back to Home
+          {t.back_to_home}
         </Link>
 
-        <h1 className="text-4xl font-light text-gray-900 mb-8">About Us</h1>
-        
-        <div className="space-y-6 text-gray-600">
-          <p className="text-lg leading-relaxed">
-            Welcome to our modern, minimalist e-commerce store. We believe in simplicity, 
-            quality, and exceptional customer experience.
+        {/* Page Header */}
+        <div className="mb-12">
+          <h1 className="text-4xl md:text-5xl font-semibold text-apple-gray-900 mb-4">
+            {t.about_title}
+          </h1>
+        </div>
+
+        {/* Content */}
+        <div className="bg-white rounded-lg border border-gray-200 shadow-sm p-8 md:p-12 space-y-6">
+          <p className="text-lg leading-relaxed text-gray-700">
+            {t.about_content_1}
           </p>
           
-          <p className="leading-relaxed">
-            Our mission is to curate a collection of products that combine form and function, 
-            bringing you items that enhance your daily life while maintaining a clean, 
-            uncluttered aesthetic.
+          <p className="leading-relaxed text-gray-600">
+            {t.about_content_2}
           </p>
           
-          <p className="leading-relaxed">
-            Every product in our store has been carefully selected for its quality, design, 
-            and value. We strive to offer a seamless shopping experience from discovery to 
-            delivery.
+          <p className="leading-relaxed text-gray-600">
+            {t.about_content_3}
           </p>
         </div>
-      </section>
+      </main>
     </div>
   );
 }

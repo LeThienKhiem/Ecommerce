@@ -15,3 +15,5 @@ END $$;
 -- Add comment
 COMMENT ON COLUMN products.main_category IS 'Main category (Audience): Nam, Nữ, Trẻ em, or Unisex';
 
+
+
