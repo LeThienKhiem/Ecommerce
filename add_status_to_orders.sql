@@ -23,3 +23,6 @@ CREATE INDEX IF NOT EXISTS idx_orders_status ON orders(status);
 COMMENT ON COLUMN orders.status IS 'Order status: pending or done';
 
 
+
+
+

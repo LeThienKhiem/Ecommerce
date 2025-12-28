@@ -8,6 +8,8 @@ export interface Product {
   images?: string[];
   category?: string;
   source_url?: string;
+  affiliate_link?: string;
+  tags?: string[];
   is_published?: boolean;
   created_at?: string;
   updated_at?: string;

@@ -58,9 +58,40 @@ export default async function ProductDetailPage({
     ? product.images.slice(1) 
     : [];
 
+  // Prepare JSON-LD structured data
+  const baseUrl = 'https://kilolook.com';
+  const productUrl = `${baseUrl}/products/${product.slug}`;
+  const productImage = mainImage 
+    ? (mainImage.startsWith('http') ? mainImage : `${baseUrl}${mainImage.startsWith('/') ? mainImage : `/${mainImage}`}`)
+    : undefined;
+  
+  const jsonLd: any = {
+    '@context': 'https://schema.org',
+    '@type': 'Product',
+    name: product.title,
+    description: product.description || product.title,
+    offers: {
+      '@type': 'Offer',
+      price: product.price_selling,
+      priceCurrency: 'VND',
+      availability: 'https://schema.org/InStock',
+      url: productUrl,
+    },
+  };
+
+  // Only add image if it exists
+  if (productImage) {
+    jsonLd.image = productImage;
+  }
+
   return (
-    <div className="min-h-screen bg-white">
-      <Header />
+    <>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+      />
+      <div className="min-h-screen bg-white">
+        <Header />
 
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Back Button */}
@@ -132,16 +163,43 @@ export default async function ProductDetailPage({
               </div>
             )}
 
+            {/* Tags */}
+            {product.tags && product.tags.length > 0 && (
+              <div className="flex flex-wrap gap-2">
+                {product.tags.map((tag, index) => (
+                  <Link
+                    key={index}
+                    href={`/tags/${encodeURIComponent(tag)}`}
+                    className="inline-block px-3 py-1 text-sm bg-gray-100 text-gray-700 rounded-full hover:bg-apple-blue hover:text-white transition-colors"
+                  >
+                    #{tag}
+                  </Link>
+                ))}
+              </div>
+            )}
+
             {/* Action Buttons */}
             <div className="space-y-3 pt-6">
-              <AddToCartButton product={product} />
-
-              <Link
-                href="/checkout"
-                className="w-full flex items-center justify-center gap-2 border border-gray-300 text-apple-gray-900 py-3 rounded-full hover:bg-gray-50 transition-colors font-medium text-sm"
-              >
-                Thanh Toán
-              </Link>
+              {product.affiliate_link ? (
+                <a
+                  href={product.affiliate_link}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="w-full bg-apple-blue text-white py-3 rounded-full hover:bg-blue-600 transition-colors font-medium text-center block"
+                >
+                  Mua ngay giá rẻ
+                </a>
+              ) : (
+                <>
+                  <AddToCartButton product={product} />
+                  <Link
+                    href="/checkout"
+                    className="w-full flex items-center justify-center gap-2 border border-gray-300 text-apple-gray-900 py-3 rounded-full hover:bg-gray-50 transition-colors font-medium text-sm"
+                  >
+                    Thanh Toán
+                  </Link>
+                </>
+              )}
             </div>
 
             {/* Product Info Table */}
@@ -167,7 +225,8 @@ export default async function ProductDetailPage({
           </div>
         </div>
       </main>
-    </div>
+      </div>
+    </>
   );
 }
 

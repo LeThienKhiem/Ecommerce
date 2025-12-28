@@ -2,10 +2,12 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { LogOut, Package, ShoppingBag, Plus, Trash2, CheckCircle2 } from "lucide-react";
+import { LogOut, Package, ShoppingBag, Plus, Trash2, CheckCircle2, Upload, FileText, FileSpreadsheet } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import { Product } from "@/types/product";
 import { Order } from "@/types/order";
+import { generateSlug } from "@/lib/utils";
+import Papa from "papaparse";
 
 export default function AdminDashboard() {
   const router = useRouter();
@@ -14,6 +16,14 @@ export default function AdminDashboard() {
   const [orders, setOrders] = useState<Order[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [showAddProduct, setShowAddProduct] = useState(false);
+  const [showBulkImport, setShowBulkImport] = useState(false);
+  const [importTab, setImportTab] = useState<"json" | "csv">("json");
+  const [jsonInput, setJsonInput] = useState("");
+  const [importProgress, setImportProgress] = useState<{
+    total: number;
+    imported: number;
+    errors: string[];
+  } | null>(null);
 
   // New product form state
   const [newProduct, setNewProduct] = useState({
@@ -25,6 +35,7 @@ export default function AdminDashboard() {
     images: "",
     category: "",
     source_url: "",
+    tags: "",
     is_published: true,
   });
 
@@ -87,6 +98,7 @@ export default function AdminDashboard() {
         images: newProduct.images ? newProduct.images.split(",").map((img) => img.trim()) : [],
         category: newProduct.category || null,
         source_url: newProduct.source_url || null,
+        tags: newProduct.tags ? newProduct.tags.split(",").map((tag) => tag.trim()).filter((tag) => tag.length > 0) : [],
         is_published: newProduct.is_published,
       };
 
@@ -105,6 +117,7 @@ export default function AdminDashboard() {
         images: "",
         category: "",
         source_url: "",
+        tags: "",
         is_published: true,
       });
       fetchData();
@@ -145,6 +158,200 @@ export default function AdminDashboard() {
       console.error("Error updating order status:", error);
       alert("Lỗi khi cập nhật trạng thái: " + (error as Error).message);
     }
+  };
+
+  const handleImportJSON = async () => {
+    if (!jsonInput.trim()) {
+      alert("Vui lòng nhập dữ liệu JSON");
+      return;
+    }
+
+    try {
+      // Parse JSON
+      let products: any[];
+      try {
+        products = JSON.parse(jsonInput);
+      } catch (parseError) {
+        alert("Lỗi: JSON không hợp lệ. Vui lòng kiểm tra lại định dạng.");
+        return;
+      }
+
+      if (!Array.isArray(products)) {
+        alert("Lỗi: Dữ liệu phải là một mảng JSON");
+        return;
+      }
+
+      if (products.length === 0) {
+        alert("Lỗi: Mảng rỗng, không có sản phẩm nào để nhập");
+        return;
+      }
+
+      // Initialize progress
+      setImportProgress({ total: products.length, imported: 0, errors: [] });
+      const errors: string[] = [];
+
+      // Process each product
+      for (let i = 0; i < products.length; i++) {
+        const product = products[i];
+
+        // Validate required fields
+        if (!product.title || !product.price_selling || !product.images) {
+          errors.push(`Sản phẩm ${i + 1}: Thiếu thông tin bắt buộc (title, price_selling, images)`);
+          setImportProgress({ total: products.length, imported: i + 1, errors: [...errors] });
+          continue;
+        }
+
+        // Prepare product data
+        const images = Array.isArray(product.images)
+          ? product.images
+          : typeof product.images === "string"
+          ? product.images.split(",").map((img: string) => img.trim())
+          : [];
+
+        const tags = product.tags
+          ? Array.isArray(product.tags)
+            ? product.tags.map((tag: any) => String(tag).trim()).filter((tag: string) => tag.length > 0)
+            : String(product.tags).split(",").map((tag: string) => tag.trim()).filter((tag: string) => tag.length > 0)
+          : [];
+
+        const productData = {
+          title: String(product.title).trim(),
+          slug: product.slug || generateSlug(product.title),
+          price_original: parseInt(product.price_original) || parseInt(product.price_selling),
+          price_selling: parseInt(product.price_selling),
+          description: product.description ? String(product.description).trim() : null,
+          images: images,
+          category: product.category ? String(product.category).trim() : null,
+          source_url: product.source_url ? String(product.source_url).trim() : null,
+          tags: tags,
+          is_published: product.is_published !== undefined ? Boolean(product.is_published) : true,
+        };
+
+        // Insert into Supabase
+        try {
+          const { error } = await supabase.from("products").insert([productData]);
+          if (error) throw error;
+        } catch (insertError: any) {
+          errors.push(`Sản phẩm ${i + 1} (${product.title}): ${insertError.message}`);
+        }
+
+        setImportProgress({ total: products.length, imported: i + 1, errors: [...errors] });
+      }
+
+      // Show completion message
+      const successCount = products.length - errors.length;
+      if (errors.length > 0) {
+        alert(
+          `Nhập hoàn tất!\nThành công: ${successCount}/${products.length}\nLỗi: ${errors.length}\n\nChi tiết lỗi:\n${errors.slice(0, 5).join("\n")}${errors.length > 5 ? `\n... và ${errors.length - 5} lỗi khác` : ""}`
+        );
+      } else {
+        alert(`Nhập thành công ${successCount}/${products.length} sản phẩm!`);
+      }
+
+      // Reset and refresh
+      setJsonInput("");
+      setImportProgress(null);
+      fetchData();
+    } catch (error) {
+      console.error("Error importing JSON:", error);
+      alert("Lỗi khi nhập JSON: " + (error as Error).message);
+      setImportProgress(null);
+    }
+  };
+
+  const handleImportCSV = async (file: File) => {
+    if (!file) return;
+
+    Papa.parse(file, {
+      header: true,
+      skipEmptyLines: true,
+      complete: async (results) => {
+        const rows = results.data as any[];
+
+        if (rows.length === 0) {
+          alert("Lỗi: File CSV rỗng hoặc không có dữ liệu");
+          return;
+        }
+
+        // Initialize progress
+        setImportProgress({ total: rows.length, imported: 0, errors: [] });
+        const errors: string[] = [];
+
+        // Map CSV columns (case-insensitive)
+        const mapColumn = (row: any, possibleNames: string[]): string | undefined => {
+          for (const name of possibleNames) {
+            const key = Object.keys(row).find((k) => k.toLowerCase() === name.toLowerCase());
+            if (key && row[key]) return String(row[key]).trim();
+          }
+          return undefined;
+        };
+
+        // Process each row
+        for (let i = 0; i < rows.length; i++) {
+          const row = rows[i];
+
+          // Map CSV fields to database columns
+          const title = mapColumn(row, ["title", "tên", "name", "product"]);
+          const priceSelling = mapColumn(row, ["price", "price_selling", "giá", "price_sell"]);
+          const priceOriginal = mapColumn(row, ["price_original", "giá_gốc", "original_price"]);
+          const imageUrl = mapColumn(row, ["image", "imageurl", "image_url", "images", "hình_ảnh", "url"]);
+          const description = mapColumn(row, ["description", "mô_tả", "desc"]);
+          const category = mapColumn(row, ["category", "danh_mục", "cat"]);
+          const sourceUrl = mapColumn(row, ["source_url", "source", "url", "link"]);
+
+          // Validate required fields
+          if (!title || !priceSelling || !imageUrl) {
+            errors.push(`Dòng ${i + 2}: Thiếu thông tin bắt buộc (Title, Price, ImageUrl)`);
+            setImportProgress({ total: rows.length, imported: i + 1, errors: [...errors] });
+            continue;
+          }
+
+          // Prepare product data
+          const images = imageUrl.split(",").map((img: string) => img.trim()).filter((img: string) => img);
+
+          const productData = {
+            title: title,
+            slug: generateSlug(title),
+            price_original: priceOriginal ? parseInt(priceOriginal) : parseInt(priceSelling),
+            price_selling: parseInt(priceSelling),
+            description: description || null,
+            images: images,
+            category: category || null,
+            source_url: sourceUrl || null,
+            is_published: true,
+          };
+
+          // Insert into Supabase
+          try {
+            const { error } = await supabase.from("products").insert([productData]);
+            if (error) throw error;
+          } catch (insertError: any) {
+            errors.push(`Dòng ${i + 2} (${title}): ${insertError.message}`);
+          }
+
+          setImportProgress({ total: rows.length, imported: i + 1, errors: [...errors] });
+        }
+
+        // Show completion message
+        const successCount = rows.length - errors.length;
+        if (errors.length > 0) {
+          alert(
+            `Nhập hoàn tất!\nThành công: ${successCount}/${rows.length}\nLỗi: ${errors.length}\n\nChi tiết lỗi:\n${errors.slice(0, 5).join("\n")}${errors.length > 5 ? `\n... và ${errors.length - 5} lỗi khác` : ""}`
+          );
+        } else {
+          alert(`Nhập thành công ${successCount}/${rows.length} sản phẩm!`);
+        }
+
+        // Reset and refresh
+        setImportProgress(null);
+        fetchData();
+      },
+      error: (error) => {
+        console.error("CSV parsing error:", error);
+        alert("Lỗi khi đọc file CSV: " + error.message);
+        setImportProgress(null);
+      },
+    });
   };
 
   if (isLoading) {
@@ -409,6 +616,21 @@ export default function AdminDashboard() {
                   </div>
                   <div className="md:col-span-2">
                     <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Tags (phân cách bằng dấu phẩy)
+                    </label>
+                    <input
+                      type="text"
+                      value={newProduct.tags}
+                      onChange={(e) =>
+                        setNewProduct({ ...newProduct, tags: e.target.value })
+                      }
+                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                      placeholder="tag1, tag2, tag3"
+                    />
+                    <p className="text-xs text-gray-500 mt-1">Ví dụ: quần áo, thời trang, sale</p>
+                  </div>
+                  <div className="md:col-span-2">
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
                       Hình ảnh (URLs, phân cách bằng dấu phẩy)
                     </label>
                     <textarea
@@ -451,6 +673,159 @@ export default function AdminDashboard() {
                 </div>
               </div>
             )}
+
+            {/* Bulk Import Section */}
+            <div className="bg-white rounded-lg border border-gray-200 p-6">
+              <div className="flex justify-between items-center mb-4">
+                <h2 className="text-xl font-semibold text-gray-900">Nhập hàng loạt</h2>
+                <button
+                  onClick={() => setShowBulkImport(!showBulkImport)}
+                  className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                >
+                  <Upload className="w-4 h-4" />
+                  {showBulkImport ? "Ẩn" : "Hiện"} nhập hàng loạt
+                </button>
+              </div>
+
+              {showBulkImport && (
+                <div className="space-y-4">
+                  {/* Import Tabs */}
+                  <div className="flex gap-4 border-b border-gray-200">
+                    <button
+                      onClick={() => setImportTab("json")}
+                      className={`px-6 py-3 font-semibold border-b-2 transition-colors ${
+                        importTab === "json"
+                          ? "border-blue-600 text-blue-600"
+                          : "border-transparent text-gray-500 hover:text-gray-700"
+                      }`}
+                    >
+                      <FileText className="w-4 h-4 inline mr-2" />
+                      Import JSON
+                    </button>
+                    <button
+                      onClick={() => setImportTab("csv")}
+                      className={`px-6 py-3 font-semibold border-b-2 transition-colors ${
+                        importTab === "csv"
+                          ? "border-blue-600 text-blue-600"
+                          : "border-transparent text-gray-500 hover:text-gray-700"
+                      }`}
+                    >
+                      <FileSpreadsheet className="w-4 h-4 inline mr-2" />
+                      Import CSV
+                    </button>
+                  </div>
+
+                  {/* JSON Import */}
+                  {importTab === "json" && (
+                    <div className="space-y-4">
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                          Dán JSON mảng sản phẩm
+                        </label>
+                        <textarea
+                          value={jsonInput}
+                          onChange={(e) => setJsonInput(e.target.value)}
+                          rows={12}
+                          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none font-mono text-sm"
+                          placeholder={`[\n  {\n    "title": "Tên sản phẩm",\n    "price_selling": 550000,\n    "price_original": 900000,\n    "images": ["https://example.com/image.jpg"],\n    "description": "Mô tả sản phẩm",\n    "category": "Sweater"\n  }\n]`}
+                        />
+                        <p className="text-xs text-gray-500 mt-2">
+                          Yêu cầu: title, price_selling, images (mảng hoặc chuỗi phân cách bằng dấu phẩy)
+                        </p>
+                      </div>
+                      {importProgress && (
+                        <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                          <div className="flex justify-between items-center mb-2">
+                            <span className="text-sm font-medium text-blue-900">
+                              Đang nhập: {importProgress.imported}/{importProgress.total}
+                            </span>
+                            <span className="text-sm text-blue-700">
+                              {Math.round((importProgress.imported / importProgress.total) * 100)}%
+                            </span>
+                          </div>
+                          <div className="w-full bg-blue-200 rounded-full h-2">
+                            <div
+                              className="bg-blue-600 h-2 rounded-full transition-all duration-300"
+                              style={{
+                                width: `${(importProgress.imported / importProgress.total) * 100}%`,
+                              }}
+                            />
+                          </div>
+                          {importProgress.errors.length > 0 && (
+                            <div className="mt-2 text-xs text-red-600">
+                              {importProgress.errors.length} lỗi xảy ra
+                            </div>
+                          )}
+                        </div>
+                      )}
+                      <button
+                        onClick={handleImportJSON}
+                        disabled={!jsonInput.trim() || (importProgress !== null && importProgress.imported < importProgress.total)}
+                        className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                      >
+                        Nhập JSON
+                      </button>
+                    </div>
+                  )}
+
+                  {/* CSV Import */}
+                  {importTab === "csv" && (
+                    <div className="space-y-4">
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                          Chọn file CSV
+                        </label>
+                        <input
+                          type="file"
+                          accept=".csv"
+                          onChange={(e) => {
+                            const file = e.target.files?.[0];
+                            if (file) {
+                              handleImportCSV(file);
+                            }
+                          }}
+                          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                        />
+                        <p className="text-xs text-gray-500 mt-2">
+                          CSV cần có các cột: Title (hoặc Tên), Price (hoặc Giá), ImageUrl (hoặc Image/Images), Description (tùy chọn), Category (tùy chọn)
+                        </p>
+                        <div className="mt-4 p-3 bg-gray-50 rounded-lg text-xs font-mono">
+                          <p className="font-semibold mb-1">Ví dụ định dạng CSV:</p>
+                          <pre>{`Title,Price,ImageUrl,Description,Category
+Áo len,550000,https://example.com/image1.jpg,Mô tả sản phẩm,Sweater
+Áo thun,350000,https://example.com/image2.jpg,Mô tả sản phẩm 2,T-Shirt`}</pre>
+                        </div>
+                      </div>
+                      {importProgress && (
+                        <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                          <div className="flex justify-between items-center mb-2">
+                            <span className="text-sm font-medium text-blue-900">
+                              Đang nhập: {importProgress.imported}/{importProgress.total}
+                            </span>
+                            <span className="text-sm text-blue-700">
+                              {Math.round((importProgress.imported / importProgress.total) * 100)}%
+                            </span>
+                          </div>
+                          <div className="w-full bg-blue-200 rounded-full h-2">
+                            <div
+                              className="bg-blue-600 h-2 rounded-full transition-all duration-300"
+                              style={{
+                                width: `${(importProgress.imported / importProgress.total) * 100}%`,
+                              }}
+                            />
+                          </div>
+                          {importProgress.errors.length > 0 && (
+                            <div className="mt-2 text-xs text-red-600">
+                              {importProgress.errors.length} lỗi xảy ra
+                            </div>
+                          )}
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
 
             {/* Products List */}
             <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">

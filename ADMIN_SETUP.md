@@ -93,3 +93,6 @@ The admin panel uses session-based authentication:
 - Ensure the `products` table exists and has the correct schema
 
 
+
+
+
