@@ -36,6 +36,7 @@ export interface Dictionary {
   wholesale_form_phone: string;
   wholesale_form_address: string;
   wholesale_form_message: string;
+  wholesale_form_title: string;
   wholesale_submit: string;
   wholesale_success: string;
   name: string;
@@ -101,6 +102,7 @@ export const dictionary: Record<Language, Dictionary> = {
     wholesale_form_phone: 'Số Điện Thoại',
     wholesale_form_address: 'Địa Chỉ',
     wholesale_form_message: 'Tin Nhắn',
+    wholesale_form_title: 'Đăng Ký Nhận Báo Giá Sỉ',
     wholesale_submit: 'Gửi Thông Tin',
     wholesale_success: 'Gửi thông tin thành công! Chúng tôi sẽ liên hệ trong 24h',
     name: 'Họ và Tên',
@@ -164,6 +166,7 @@ export const dictionary: Record<Language, Dictionary> = {
     wholesale_form_phone: 'Phone Number',
     wholesale_form_address: 'Address',
     wholesale_form_message: 'Message',
+    wholesale_form_title: 'Register for Wholesale Quote',
     wholesale_submit: 'Submit Information',
     wholesale_success: 'Information submitted successfully! We will contact you within 24 hours',
     name: 'Full Name',
