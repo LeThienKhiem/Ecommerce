@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { ArrowLeft, Mail, Phone, MapPin } from "lucide-react";
+import { ArrowLeft, Phone } from "lucide-react";
 import Header from "@/components/Header";
 import { useLanguage } from "@/contexts/LanguageContext";
 
@@ -38,23 +38,6 @@ export default function ContactPage() {
             <div className="space-y-8">
               <div className="flex items-start gap-4">
                 <div className="flex-shrink-0 w-12 h-12 bg-apple-blue/10 rounded-lg flex items-center justify-center">
-                  <Mail className="h-6 w-6 text-apple-blue" />
-                </div>
-                <div>
-                  <h3 className="font-semibold text-apple-gray-900 mb-2">
-                    {t.contact_email}
-                  </h3>
-                  <a 
-                    href={`mailto:${t.contact_shop_email}`}
-                    className="text-gray-600 hover:text-apple-blue transition-colors"
-                  >
-                    {t.contact_shop_email}
-                  </a>
-                </div>
-              </div>
-              
-              <div className="flex items-start gap-4">
-                <div className="flex-shrink-0 w-12 h-12 bg-apple-blue/10 rounded-lg flex items-center justify-center">
                   <Phone className="h-6 w-6 text-apple-blue" />
                 </div>
                 <div>
@@ -62,25 +45,11 @@ export default function ContactPage() {
                     {t.contact_phone}
                   </h3>
                   <a 
-                    href={`tel:${t.contact_shop_phone.replace(/\s/g, '')}`}
+                    href="tel:0868669897"
                     className="text-gray-600 hover:text-apple-blue transition-colors"
                   >
-                    {t.contact_shop_phone}
+                    0868669897
                   </a>
-                </div>
-              </div>
-              
-              <div className="flex items-start gap-4">
-                <div className="flex-shrink-0 w-12 h-12 bg-apple-blue/10 rounded-lg flex items-center justify-center">
-                  <MapPin className="h-6 w-6 text-apple-blue" />
-                </div>
-                <div>
-                  <h3 className="font-semibold text-apple-gray-900 mb-2">
-                    {t.contact_address}
-                  </h3>
-                  <p className="text-gray-600 leading-relaxed">
-                    {t.contact_shop_address}
-                  </p>
                 </div>
               </div>
             </div>
