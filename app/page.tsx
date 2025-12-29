@@ -38,6 +38,40 @@ async function getFeaturedProducts(searchQuery?: string): Promise<Product[]> {
 
     let products = data || [];
 
+    // Separate products into available and out-of-stock groups
+    // Available: stock > 0 OR has affiliate_link
+    // Out-of-stock: stock <= 0 AND no affiliate_link
+    const availableProducts: Product[] = [];
+    const outOfStockProducts: Product[] = [];
+
+    products.forEach((product: Product) => {
+      const isAvailable = 
+        (product.stock !== null && product.stock !== undefined && product.stock > 0) ||
+        (product.affiliate_link && product.affiliate_link.trim().length > 0);
+      
+      if (isAvailable) {
+        availableProducts.push(product);
+      } else {
+        outOfStockProducts.push(product);
+      }
+    });
+
+    // Sort each group by sort_order (descending) to maintain shuffle within groups
+    availableProducts.sort((a, b) => {
+      const aOrder = a.sort_order || 0;
+      const bOrder = b.sort_order || 0;
+      return bOrder - aOrder;
+    });
+
+    outOfStockProducts.sort((a, b) => {
+      const aOrder = a.sort_order || 0;
+      const bOrder = b.sort_order || 0;
+      return bOrder - aOrder;
+    });
+
+    // Combine: available items first, then out-of-stock items
+    products = [...availableProducts, ...outOfStockProducts];
+
     // Additional search for tags if search query exists
     // Since Supabase .or() already handled title/description/main_category,
     // we now check tags and add any matching products that weren't already included
