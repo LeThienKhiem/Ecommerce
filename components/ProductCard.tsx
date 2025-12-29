@@ -5,6 +5,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { Product } from "@/types/product";
 import AddToCartButton from "./AddToCartButton";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 interface ProductCardProps {
   product: Product;
@@ -12,6 +13,7 @@ interface ProductCardProps {
 }
 
 export default function ProductCard({ product, index }: ProductCardProps) {
+  const { t } = useLanguage();
   const images = product.images && product.images.length > 0 ? product.images : [];
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [isHovered, setIsHovered] = useState(false);
@@ -142,7 +144,7 @@ export default function ProductCard({ product, index }: ProductCardProps) {
           rel="noopener noreferrer"
           className="w-full bg-apple-blue text-white py-3 rounded-full hover:bg-blue-600 transition-colors font-medium text-center block text-sm"
         >
-          Mua ngay trên Shopee
+          {t.product_buy_on_shopee}
         </a>
       ) : (
         <AddToCartButton product={product} className="w-full text-sm font-medium" />

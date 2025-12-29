@@ -14,11 +14,15 @@ const LanguageContext = createContext<LanguageContextType | undefined>(undefined
 export function LanguageProvider({ children }: { children: ReactNode }) {
   const [lang, setLangState] = useState<Language>("vi");
 
-  // Load language from localStorage on mount
+  // Load language from localStorage on mount (default to Vietnamese if not set)
   useEffect(() => {
     const savedLang = localStorage.getItem("lang") as Language;
     if (savedLang === "vi" || savedLang === "en") {
       setLangState(savedLang);
+    } else {
+      // Default to Vietnamese if no saved language
+      setLangState("vi");
+      localStorage.setItem("lang", "vi");
     }
   }, []);
 

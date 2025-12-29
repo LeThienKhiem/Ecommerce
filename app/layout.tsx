@@ -3,6 +3,7 @@ import "./globals.css";
 import { CartProvider } from "@/contexts/CartContext";
 import { SearchProvider } from "@/contexts/SearchContext";
 import { LanguageProvider } from "@/contexts/LanguageContext";
+import FirebaseAnalytics from "@/components/FirebaseAnalytics";
 
 export const metadata: Metadata = {
   title: "Kilolook Store",
@@ -15,11 +16,12 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
+    <html lang="vi">
       <body className="antialiased">
         <LanguageProvider>
           <CartProvider>
             <SearchProvider>
+              <FirebaseAnalytics />
               {children}
             </SearchProvider>
           </CartProvider>

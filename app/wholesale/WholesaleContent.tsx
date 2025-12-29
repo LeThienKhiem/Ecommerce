@@ -19,23 +19,23 @@ export default function WholesaleContent() {
   const features = [
     {
       icon: DollarSign,
-      title: "Giá Rẻ Nhất",
-      description: "Giá sỉ tận gốc, không qua trung gian, chiết khấu cao cho đơn hàng số lượng lớn",
+      title: t.wholesale_feature_price_title,
+      description: t.wholesale_feature_price_desc,
     },
     {
       icon: Package,
-      title: "Sẵn Hàng Số Lượng Lớn",
-      description: "Kho hàng luôn đầy đủ, đáp ứng mọi nhu cầu nhập sỉ với số lượng lớn",
+      title: t.wholesale_feature_stock_title,
+      description: t.wholesale_feature_stock_desc,
     },
     {
       icon: ImageIcon,
-      title: "Hỗ Trợ Hình Ảnh",
-      description: "Cung cấp đầy đủ hình ảnh sản phẩm chất lượng cao để hỗ trợ bán hàng",
+      title: t.wholesale_feature_images_title,
+      description: t.wholesale_feature_images_desc,
     },
     {
       icon: Truck,
-      title: "Giao Hàng Toàn Quốc",
-      description: "Vận chuyển nhanh chóng, an toàn đến mọi tỉnh thành trên cả nước",
+      title: t.wholesale_feature_shipping_title,
+      description: t.wholesale_feature_shipping_desc,
     },
   ];
 
@@ -59,16 +59,16 @@ export default function WholesaleContent() {
         <div className="relative z-10 w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-24 md:py-32">
           <div className="text-center max-w-4xl mx-auto">
             <h1 className="text-4xl md:text-6xl lg:text-7xl font-bold mb-6 animate-fade-in-up">
-              Kho Sỉ Quần Áo Lớn Nhất - Giá Rẻ Tận Gốc
+              {t.wholesale_hero_title}
             </h1>
             <p className="text-xl md:text-2xl text-white mb-10 animate-fade-in-up animation-delay-200">
-              Nguồn hàng ổn định - Số lượng lớn - Luôn đầy hàng
+              {t.wholesale_hero_subtitle}
             </p>
             <button
               onClick={() => setIsModalOpen(true)}
               className="group inline-flex items-center gap-3 bg-white text-apple-blue px-8 py-4 rounded-full text-lg font-semibold hover:bg-blue-50 transition-all duration-300 shadow-xl hover:shadow-2xl hover:scale-105 animate-fade-in-up animation-delay-400"
             >
-              <span>Liên Hệ Nhập Sỉ Ngay</span>
+              <span>{t.wholesale_hero_cta}</span>
               <ArrowRight className="h-5 w-5 group-hover:translate-x-1 transition-transform" />
             </button>
           </div>
@@ -106,46 +106,36 @@ export default function WholesaleContent() {
       <article className="py-20 bg-white">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
           <h2 className="text-3xl md:text-4xl font-bold text-apple-gray-900 mb-8">
-            Tại Sao Nên Chọn Kilolook Làm Đối Tác Bán Sỉ?
+            {t.wholesale_seo_title}
           </h2>
 
           <div className="space-y-6 text-gray-700 leading-relaxed text-lg">
             <p>
-              Kilolook tự hào là <strong className="text-apple-gray-900">nguồn hàng sỉ quần áo</strong> uy tín hàng đầu, 
-              chuyên cung cấp <strong className="text-apple-gray-900">quần áo giá rẻ</strong> tận gốc cho các đối tác 
-              kinh doanh trên toàn quốc. Với nhiều năm kinh nghiệm trong lĩnh vực <strong className="text-apple-gray-900">bán sỉ quần áo</strong>, 
-              chúng tôi cam kết mang đến cho bạn những sản phẩm chất lượng với mức giá cạnh tranh nhất thị trường.
+              {t.wholesale_seo_content_1}
             </p>
 
             <p>
-              Điểm mạnh của Kilolook là <strong className="text-apple-gray-900">nguồn hàng ổn định</strong>, 
-              không qua trung gian, giúp bạn có được mức giá tốt nhất. Chúng tôi sở hữu <strong className="text-apple-gray-900">kho sỉ số lượng lớn</strong> 
-              với hàng nghìn sản phẩm luôn có sẵn, đáp ứng mọi nhu cầu <strong className="text-apple-gray-900">buôn bán quần áo</strong> 
-              của bạn. Từ áo thun, quần jean, váy đầm đến các phụ kiện thời trang, tất cả đều được tuyển chọn kỹ lưỡng 
-              để đảm bảo chất lượng và xu hướng thời trang mới nhất.
+              {t.wholesale_seo_content_2}
             </p>
 
             <p>
-              Khi hợp tác với Kilolook, bạn sẽ nhận được nhiều ưu đãi đặc biệt: chiết khấu cao cho đơn hàng số lượng lớn, 
-              hỗ trợ hình ảnh sản phẩm chất lượng, giao hàng nhanh chóng toàn quốc, và đội ngũ tư vấn chuyên nghiệp luôn sẵn sàng 
-              hỗ trợ bạn 24/7. Chúng tôi hiểu rằng thành công của bạn chính là thành công của chúng tôi, vì vậy chúng tôi luôn 
-              nỗ lực để trở thành đối tác đáng tin cậy nhất trong hành trình kinh doanh của bạn.
+              {t.wholesale_seo_content_3}
             </p>
           </div>
 
           {/* CTA Section */}
           <div className="mt-12 bg-gradient-to-r from-apple-blue to-blue-600 rounded-2xl p-8 text-white text-center">
             <h3 className="text-2xl font-bold mb-4">
-              Sẵn Sàng Bắt Đầu Kinh Doanh?
+              {t.wholesale_cta_title}
             </h3>
             <p className="text-blue-100 mb-6 text-lg">
-              Đăng ký ngay để nhận báo giá sỉ tốt nhất và trở thành đối tác của chúng tôi
+              {t.wholesale_cta_subtitle}
             </p>
             <button
               onClick={() => setIsModalOpen(true)}
               className="bg-white text-apple-blue px-8 py-3 rounded-full font-semibold hover:bg-blue-50 transition-colors inline-flex items-center gap-2"
             >
-              <span>Đăng Ký Nhận Báo Giá Ngay</span>
+              <span>{t.wholesale_cta_button}</span>
               <ArrowRight className="h-5 w-5" />
             </button>
           </div>
@@ -161,7 +151,7 @@ export default function WholesaleContent() {
 
       {/* Toast */}
       <Toast
-        message={lang === "vi" ? "Gửi thông tin thành công! Chúng tôi sẽ liên hệ trong 24h" : "Success! We will contact you within 24 hours"}
+        message={t.wholesale_success}
         isVisible={showToast}
         onClose={() => setShowToast(false)}
         type="success"

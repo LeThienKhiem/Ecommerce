@@ -8,8 +8,9 @@ import { ArrowLeft } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import { Product } from "@/types/product";
 import Header from "@/components/Header";
-import ProductDetailActions from "@/components/ProductDetailActions";
 import ProductImageGallery from "@/components/ProductImageGallery";
+import ProductDetailContent from "@/components/ProductDetailContent";
+import ProductDetailBackButton from "@/components/ProductDetailBackButton";
 
 async function getProductBySlug(slug: string): Promise<Product | null> {
   try {
@@ -143,13 +144,7 @@ export default async function ProductDetailPage({
 
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Back Button */}
-        <Link 
-          href="/products" 
-          className="inline-flex items-center text-gray-600 hover:text-apple-gray-900 transition-colors mb-6"
-        >
-          <ArrowLeft className="h-4 w-4 mr-2" />
-          Quay Lại Sản Phẩm
-        </Link>
+        <ProductDetailBackButton />
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-16">
           {/* Product Images */}
@@ -161,105 +156,12 @@ export default async function ProductDetailPage({
           />
 
           {/* Product Info */}
-          <div className="space-y-6">
-            {/* Category */}
-            {product.category && (
-              <div className="text-sm text-gray-500 uppercase tracking-wide">
-                {product.category}
-              </div>
-            )}
-
-            {/* Title */}
-            <h1 className="text-4xl md:text-5xl font-semibold text-apple-gray-900">
-              {product.title}
-            </h1>
-
-            {/* Price */}
-            <div className="flex items-baseline gap-4 py-4 border-t border-b border-gray-200">
-              <div className="flex items-baseline gap-3">
-                {originalPrice && (
-                  <span className="text-xl text-gray-400 line-through">
-                    {originalPrice}k
-                  </span>
-                )}
-                <span className="text-4xl font-semibold text-apple-gray-900">
-                  {price}k
-                </span>
-                <span className="text-lg text-gray-600">VND</span>
-              </div>
-              {discount && (
-                <span className="text-sm text-red-500 font-medium">
-                  Tiết kiệm {discount}%
-                </span>
-              )}
-            </div>
-
-            {/* Shipping Info */}
-            <div className="text-green-600 font-bold">
-              🚚 Thời gian giao hàng dự kiến: 7 - 10 ngày
-            </div>
-
-            {/* Description */}
-            {product.description && (
-              <div className="space-y-3">
-                <h2 className="text-xl font-semibold text-apple-gray-900">
-                  Mô Tả
-                </h2>
-                <p className="text-gray-600 leading-relaxed whitespace-pre-line">
-                  {product.description}
-                </p>
-              </div>
-            )}
-
-            {/* Size Selection & Action Buttons */}
-            <ProductDetailActions product={product} />
-
-            {/* Product Info Table */}
-            <div className="border-t border-gray-200 pt-6 space-y-4">
-              <h3 className="text-lg font-semibold text-apple-gray-900 mb-4">
-                Thông Tin Sản Phẩm
-              </h3>
-              <div className="grid grid-cols-2 gap-4 text-sm">
-                {product.category && (
-                  <>
-                    <div className="text-gray-600">Danh Mục</div>
-                    <div className="text-apple-gray-900 font-medium">{product.category}</div>
-                  </>
-                )}
-                {product.slug && (
-                  <>
-                    <div className="text-gray-600">Mã Sản Phẩm</div>
-                    <div className="text-apple-gray-900 font-medium">{product.slug}</div>
-                  </>
-                )}
-                {!product.affiliate_link && product.stock !== undefined && (
-                  <>
-                    <div className="text-gray-600">Số lượng tồn kho</div>
-                    <div className={`font-medium ${product.stock > 0 ? "text-apple-gray-900" : "text-red-600"}`}>
-                      {product.stock > 0 ? `${product.stock} sản phẩm` : "Hết hàng"}
-                    </div>
-                  </>
-                )}
-              </div>
-            </div>
-
-            {/* Tags - Minimal Footer Style */}
-            {product.tags && product.tags.length > 0 && (
-              <div className="mt-8 border-t border-gray-100 pt-4">
-                <div className="flex flex-wrap gap-2">
-                  {product.tags.map((tag, index) => (
-                    <Link
-                      key={index}
-                      href={`/tags/${encodeURIComponent(tag)}`}
-                      className="text-xs text-gray-400 hover:text-gray-600 transition-colors"
-                    >
-                      #{tag}
-                    </Link>
-                  ))}
-                </div>
-              </div>
-            )}
-          </div>
+          <ProductDetailContent
+            product={product}
+            price={price}
+            originalPrice={originalPrice}
+            discount={discount}
+          />
         </div>
       </main>
       </div>
