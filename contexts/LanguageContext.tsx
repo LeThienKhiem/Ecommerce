@@ -3,6 +3,9 @@
 import { createContext, useContext, useState, useEffect, ReactNode } from "react";
 import { Language, dictionary } from "@/constants/dictionary";
 
+// Re-export Language type for convenience
+export type { Language };
+
 interface LanguageContextType {
   lang: Language;
   setLang: (lang: Language) => void;
@@ -17,7 +20,8 @@ export function LanguageProvider({ children }: { children: ReactNode }) {
   // Load language from localStorage on mount (default to Vietnamese if not set)
   useEffect(() => {
     const savedLang = localStorage.getItem("lang") as Language;
-    if (savedLang === "vi" || savedLang === "en") {
+    const validLanguages: Language[] = ["vi", "en", "id", "fil", "km"];
+    if (savedLang && validLanguages.includes(savedLang)) {
       setLangState(savedLang);
     } else {
       // Default to Vietnamese if no saved language

@@ -1,12 +1,12 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { Menu, X, ShoppingCart } from "lucide-react";
+import { Menu, X, ShoppingCart, ChevronDown } from "lucide-react";
 import { usePathname } from "next/navigation";
 import { useCart } from "@/contexts/CartContext";
-import { useLanguage } from "@/contexts/LanguageContext";
+import { useLanguage, Language } from "@/contexts/LanguageContext";
 import SearchBar from "./SearchBar";
 
 export default function Header() {
@@ -14,12 +14,37 @@ export default function Header() {
   const { getTotalItems } = useCart();
   const { lang, setLang, t } = useLanguage();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [isLanguageDropdownOpen, setIsLanguageDropdownOpen] = useState(false);
+  const languageDropdownRef = useRef<HTMLDivElement>(null);
 
   const isActive = (path: string) => pathname === path;
 
-  const toggleLanguage = () => {
-    setLang(lang === "vi" ? "en" : "vi");
-  };
+  const languages: { code: Language; name: string; flag: string }[] = [
+    { code: "vi", name: "Tiếng Việt", flag: "🇻🇳" },
+    { code: "en", name: "English", flag: "🇺🇸" },
+    { code: "id", name: "Bahasa Indonesia", flag: "🇮🇩" },
+    { code: "fil", name: "Filipino", flag: "🇵🇭" },
+    { code: "km", name: "ភាសាខ្មែរ", flag: "🇰🇭" },
+  ];
+
+  const currentLanguage = languages.find((l) => l.code === lang) || languages[0];
+
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (
+        languageDropdownRef.current &&
+        !languageDropdownRef.current.contains(event.target as Node)
+      ) {
+        setIsLanguageDropdownOpen(false);
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, []);
 
   const closeMobileMenu = () => {
     setIsMobileMenuOpen(false);
@@ -88,14 +113,42 @@ export default function Header() {
           {/* Right Icons */}
           <div className="flex items-center space-x-4">
             <SearchBar />
-            {/* Language Toggle */}
-            <button
-              onClick={toggleLanguage}
-              className="px-3 py-1.5 text-sm font-medium text-gray-600 hover:text-apple-gray-900 transition-colors border border-gray-300 rounded-lg hover:border-apple-gray-900"
-              title={lang === "vi" ? "Switch to English" : "Chuyển sang Tiếng Việt"}
-            >
-              {lang === "vi" ? "EN" : "VN"}
-            </button>
+            {/* Language Dropdown */}
+            <div className="relative" ref={languageDropdownRef}>
+              <button
+                onClick={() => setIsLanguageDropdownOpen(!isLanguageDropdownOpen)}
+                className="flex items-center gap-2 px-3 py-1.5 text-sm font-medium text-gray-600 hover:text-apple-gray-900 transition-colors border border-gray-300 rounded-lg hover:border-apple-gray-900"
+                title="Select Language"
+              >
+                <span>{currentLanguage.flag}</span>
+                <span className="hidden sm:inline">{currentLanguage.code.toUpperCase()}</span>
+                <ChevronDown className="h-4 w-4" />
+              </button>
+              {isLanguageDropdownOpen && (
+                <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-200 py-2 z-50">
+                  {languages.map((language) => (
+                    <button
+                      key={language.code}
+                      onClick={() => {
+                        setLang(language.code);
+                        setIsLanguageDropdownOpen(false);
+                      }}
+                      className={`w-full text-left px-4 py-2 text-sm flex items-center gap-3 hover:bg-gray-50 transition-colors ${
+                        lang === language.code
+                          ? "bg-apple-blue/10 text-apple-blue font-medium"
+                          : "text-gray-700"
+                      }`}
+                    >
+                      <span className="text-lg">{language.flag}</span>
+                      <span>{language.name}</span>
+                      {lang === language.code && (
+                        <span className="ml-auto text-apple-blue">✓</span>
+                      )}
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
             <Link href="/cart" className="p-2 text-gray-600 hover:text-apple-gray-900 transition-colors relative">
               <ShoppingCart className="h-5 w-5" />
               {getTotalItems() > 0 && (

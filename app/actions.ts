@@ -1,6 +1,7 @@
 "use server";
 
 import { supabase } from "@/lib/supabase";
+import { ProductTranslation } from "@/types/product";
 
 export interface WholesaleContactData {
   name: string;
@@ -53,6 +54,79 @@ export async function submitWholesaleContact(
   }
 }
 
+/**
+ * Auto-translate product content to all supported languages
+ * This is a placeholder function. Replace with actual translation API (OpenAI, Google Translate, etc.)
+ */
+export async function autoTranslateProduct(
+  vietnameseName: string,
+  vietnameseDescription: string,
+  vietnameseSlug: string
+): Promise<Record<string, ProductTranslation>> {
+  // TODO: Replace this with actual translation API
+  // For now, this is a placeholder that generates mock translations
+  // You can integrate OpenAI, Google Translate API, or other services here
 
+  const translations: Record<string, ProductTranslation> = {};
 
+  // English translation (placeholder - append [EN] for testing)
+  translations.en = {
+    name: vietnameseName ? `${vietnameseName} [EN]` : "",
+    description: vietnameseDescription ? `${vietnameseDescription} [EN]` : "",
+    slug: vietnameseSlug ? `${vietnameseSlug}-en` : "",
+  };
+
+  // Indonesian translation (placeholder)
+  translations.id = {
+    name: vietnameseName ? `${vietnameseName} [ID]` : "",
+    description: vietnameseDescription ? `${vietnameseDescription} [ID]` : "",
+    slug: vietnameseSlug ? `${vietnameseSlug}-id` : "",
+  };
+
+  // Filipino translation (placeholder)
+  translations.fil = {
+    name: vietnameseName ? `${vietnameseName} [FIL]` : "",
+    description: vietnameseDescription ? `${vietnameseDescription} [FIL]` : "",
+    slug: vietnameseSlug ? `${vietnameseSlug}-fil` : "",
+  };
+
+  // Khmer translation (placeholder)
+  translations.km = {
+    name: vietnameseName ? `${vietnameseName} [KM]` : "",
+    description: vietnameseDescription ? `${vietnameseDescription} [KM]` : "",
+    slug: vietnameseSlug ? `${vietnameseSlug}-km` : "",
+  };
+
+  // Example: If you want to use OpenAI API, uncomment and configure:
+  /*
+  const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+  
+  const languages = ['en', 'id', 'fil', 'km'];
+  for (const lang of languages) {
+    const nameResponse = await openai.chat.completions.create({
+      model: "gpt-3.5-turbo",
+      messages: [
+        { role: "system", content: `Translate the following Vietnamese product name to ${lang === 'en' ? 'English' : lang === 'id' ? 'Indonesian' : lang === 'fil' ? 'Filipino' : 'Khmer'}. Return only the translation, no explanations.` },
+        { role: "user", content: vietnameseName }
+      ],
+    });
+    
+    const descResponse = await openai.chat.completions.create({
+      model: "gpt-3.5-turbo",
+      messages: [
+        { role: "system", content: `Translate the following Vietnamese product description to ${lang === 'en' ? 'English' : lang === 'id' ? 'Indonesian' : lang === 'fil' ? 'Filipino' : 'Khmer'}. Return only the translation, no explanations.` },
+        { role: "user", content: vietnameseDescription }
+      ],
+    });
+    
+    translations[lang] = {
+      name: nameResponse.choices[0].message.content || "",
+      description: descResponse.choices[0].message.content || "",
+      slug: vietnameseSlug ? `${vietnameseSlug}-${lang}` : "",
+    };
+  }
+  */
+
+  return translations;
+}
 

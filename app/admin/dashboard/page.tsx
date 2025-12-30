@@ -9,6 +9,7 @@ import { Order } from "@/types/order";
 import { WholesaleContact } from "@/types/wholesale";
 import { generateSlug } from "@/lib/utils";
 import Papa from "papaparse";
+import { autoTranslateProduct } from "@/app/actions";
 
 export default function AdminDashboard() {
   const router = useRouter();
@@ -49,7 +50,9 @@ export default function AdminDashboard() {
     tags: "",
     is_published: true,
     is_featured: true,
+    translations: null as Record<string, any> | null,
   });
+  const [isTranslating, setIsTranslating] = useState(false);
 
   // Memoize fetchData to prevent infinite loops
   const fetchData = useCallback(async () => {
@@ -145,6 +148,29 @@ export default function AdminDashboard() {
     router.push("/admin");
   };
 
+  const handleAutoTranslate = async () => {
+    if (!newProduct.title) {
+      alert("Vui lòng nhập tên sản phẩm (tiếng Việt) trước khi dịch tự động");
+      return;
+    }
+
+    setIsTranslating(true);
+    try {
+      const translations = await autoTranslateProduct(
+        newProduct.title,
+        newProduct.description || "",
+        newProduct.slug || ""
+      );
+      setNewProduct({ ...newProduct, translations });
+      alert("Dịch tự động thành công! Các bản dịch đã được tạo cho tất cả ngôn ngữ.");
+    } catch (error) {
+      console.error("Error auto-translating:", error);
+      alert("Lỗi khi dịch tự động: " + (error as Error).message);
+    } finally {
+      setIsTranslating(false);
+    }
+  };
+
   const handleEditProduct = (product: Product) => {
     setEditingProductId(product.id!);
     // Determine product type based on affiliate_link
@@ -166,6 +192,7 @@ export default function AdminDashboard() {
       tags: product.tags?.join(", ") || "",
       is_published: product.is_published ?? true,
       is_featured: product.is_featured ?? true,
+      translations: product.translations || null,
     });
     setShowAddProduct(true);
   };
@@ -174,23 +201,24 @@ export default function AdminDashboard() {
     setEditingProductId(null);
     setShowAddProduct(false);
       setNewProduct({
-        title: "",
-        slug: "",
-        price_original: "",
-        price_selling: "",
-        description: "",
-        images: "",
-        main_category: "",
-        category: "",
-        source_url: "",
-        affiliate_link: "",
-        stock: "",
-        product_type: "affiliate",
-        sizes: "",
-        tags: "",
-        is_published: true,
-        is_featured: true,
-      });
+      title: "",
+      slug: "",
+      price_original: "",
+      price_selling: "",
+      description: "",
+      images: "",
+      main_category: "",
+      category: "",
+      source_url: "",
+      affiliate_link: "",
+      stock: "",
+      product_type: "affiliate",
+      sizes: "",
+      tags: "",
+      is_published: true,
+      is_featured: true,
+      translations: null,
+    });
   };
 
   const handleAddProduct = async () => {
@@ -220,6 +248,7 @@ export default function AdminDashboard() {
         tags: newProduct.tags ? newProduct.tags.split(",").map((tag) => tag.trim()).filter((tag) => tag.length > 0) : [],
         is_published: newProduct.is_published,
         is_featured: newProduct.is_featured,
+        translations: newProduct.translations || null,
       };
 
       // Handle product type logic
@@ -874,9 +903,21 @@ export default function AdminDashboard() {
                     />
                   </div>
                   <div className="md:col-span-2">
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Mô tả
-                    </label>
+                    <div className="flex items-center justify-between mb-1">
+                      <label className="block text-sm font-medium text-gray-700">
+                        Mô tả
+                      </label>
+                      <button
+                        type="button"
+                        onClick={handleAutoTranslate}
+                        disabled={isTranslating || !newProduct.title}
+                        className="flex items-center gap-2 px-3 py-1.5 text-sm font-medium text-white bg-gradient-to-r from-purple-500 to-pink-500 rounded-lg hover:from-purple-600 hover:to-pink-600 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                        title="Tự động dịch sản phẩm sang tất cả ngôn ngữ (EN, ID, FIL, KM)"
+                      >
+                        <span>✨</span>
+                        <span>{isTranslating ? "Đang dịch..." : "Tự động dịch tất cả"}</span>
+                      </button>
+                    </div>
                     <textarea
                       value={newProduct.description}
                       onChange={(e) =>

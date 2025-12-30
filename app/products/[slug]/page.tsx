@@ -14,18 +14,48 @@ import ProductDetailBackButton from "@/components/ProductDetailBackButton";
 
 async function getProductBySlug(slug: string): Promise<Product | null> {
   try {
-    const { data, error } = await supabase
+    // First, try to find by main slug column
+    let { data, error } = await supabase
       .from("products")
       .select("*")
       .eq("slug", slug)
       .eq("is_published", true)
       .single();
 
-    if (error || !data) {
+    // If found, return it
+    if (!error && data) {
+      return data;
+    }
+
+    // If not found, search in translations JSONB column
+    // Fetch all published products and search manually (more reliable than complex JSONB queries)
+    const { data: allProducts, error: allError } = await supabase
+      .from("products")
+      .select("*")
+      .eq("is_published", true);
+
+    if (allError || !allProducts) {
       return null;
     }
 
-    return data;
+    // Search manually in translations
+    const found = allProducts.find((product) => {
+      // Check main slug first
+      if (product.slug === slug) return true;
+      
+      // Check translations JSONB
+      if (product.translations && typeof product.translations === 'object') {
+        for (const lang in product.translations) {
+          const translation = (product.translations as any)[lang];
+          if (translation && typeof translation === 'object' && translation.slug === slug) {
+            return true;
+          }
+        }
+      }
+      return false;
+    });
+
+    return found || null;
   } catch (error) {
     console.error("Error fetching product:", error);
     return null;

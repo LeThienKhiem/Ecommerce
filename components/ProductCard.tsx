@@ -6,6 +6,7 @@ import Image from "next/image";
 import { Product } from "@/types/product";
 import AddToCartButton from "./AddToCartButton";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { getLocalizedProductName, getLocalizedProductSlug } from "@/lib/localization";
 
 interface ProductCardProps {
   product: Product;
@@ -13,7 +14,9 @@ interface ProductCardProps {
 }
 
 export default function ProductCard({ product, index }: ProductCardProps) {
-  const { t } = useLanguage();
+  const { t, lang } = useLanguage();
+  const localizedName = getLocalizedProductName(product, lang);
+  const localizedSlug = getLocalizedProductSlug(product, lang);
   const images = product.images && product.images.length > 0 ? product.images : [];
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [isHovered, setIsHovered] = useState(false);
@@ -89,7 +92,7 @@ export default function ProductCard({ product, index }: ProductCardProps) {
   return (
     <div className="group" ref={cardRef}>
       {/* Product Image */}
-      <Link href={`/products/${product.slug}`}>
+      <Link href={`/products/${localizedSlug}`}>
         <div
           className="aspect-square bg-apple-gray-50 mb-4 overflow-hidden rounded-lg relative"
           onMouseEnter={() => setIsHovered(true)}
@@ -101,7 +104,7 @@ export default function ProductCard({ product, index }: ProductCardProps) {
                 <Image
                   key={idx}
                   src={image}
-                  alt={`${product.title} - Image ${idx + 1}`}
+                  alt={`${localizedName} - Image ${idx + 1}`}
                   width={500}
                   height={500}
                   className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-500 ${
@@ -119,9 +122,9 @@ export default function ProductCard({ product, index }: ProductCardProps) {
       </Link>
       
       {/* Product Info */}
-      <Link href={`/products/${product.slug}`}>
+      <Link href={`/products/${localizedSlug}`}>
         <h3 className="text-lg font-medium text-apple-gray-900 mb-2 line-clamp-2 hover:text-apple-blue transition-colors">
-          {product.title}
+          {localizedName}
         </h3>
       </Link>
       

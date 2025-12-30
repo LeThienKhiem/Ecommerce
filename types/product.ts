@@ -1,3 +1,9 @@
+export interface ProductTranslation {
+  name?: string;
+  description?: string;
+  slug?: string;
+}
+
 export interface Product {
   id?: number;
   title: string;
@@ -17,6 +23,7 @@ export interface Product {
   sort_order?: number;
   created_at?: string;
   updated_at?: string;
+  translations?: Record<string, ProductTranslation>; // JSONB field: { "id": { name, description, slug }, "en": {...}, etc. }
 }
 
 

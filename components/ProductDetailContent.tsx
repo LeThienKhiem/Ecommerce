@@ -4,6 +4,7 @@ import { Product } from "@/types/product";
 import { useLanguage } from "@/contexts/LanguageContext";
 import ProductDetailActions from "./ProductDetailActions";
 import Link from "next/link";
+import { getLocalizedProductName, getLocalizedProductDescription } from "@/lib/localization";
 
 interface ProductDetailContentProps {
   product: Product;
@@ -18,7 +19,9 @@ export default function ProductDetailContent({
   originalPrice,
   discount,
 }: ProductDetailContentProps) {
-  const { t } = useLanguage();
+  const { t, lang } = useLanguage();
+  const localizedName = getLocalizedProductName(product, lang);
+  const localizedDescription = getLocalizedProductDescription(product, lang);
 
   return (
     <div className="space-y-6">
@@ -31,7 +34,7 @@ export default function ProductDetailContent({
 
       {/* Title */}
       <h1 className="text-4xl md:text-5xl font-semibold text-apple-gray-900">
-        {product.title}
+        {localizedName}
       </h1>
 
       {/* Price */}
@@ -60,13 +63,13 @@ export default function ProductDetailContent({
       </div>
 
       {/* Description */}
-      {product.description && (
+      {localizedDescription && (
         <div className="space-y-3">
           <h2 className="text-xl font-semibold text-apple-gray-900">
             {t.product_description_label}
           </h2>
           <p className="text-gray-600 leading-relaxed whitespace-pre-line">
-            {product.description}
+            {localizedDescription}
           </p>
         </div>
       )}
@@ -122,4 +125,5 @@ export default function ProductDetailContent({
     </div>
   );
 }
+
 
