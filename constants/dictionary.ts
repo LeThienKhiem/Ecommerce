@@ -24,7 +24,6 @@ export interface Dictionary {
   price: string;
   tags: string;
   shipping_info: string;
-  product_info: string;
   category: string;
   product_code: string;
   back_to_products: string;
@@ -143,7 +142,6 @@ export const dictionary: Record<Language, Dictionary> = {
     price: 'Giá',
     tags: 'Tags',
     shipping_info: 'Thông tin giao hàng',
-    product_info: 'Thông Tin Sản Phẩm',
     category: 'Danh Mục',
     product_code: 'Mã Sản Phẩm',
     back_to_products: 'Quay Lại Sản Phẩm',
@@ -260,7 +258,6 @@ export const dictionary: Record<Language, Dictionary> = {
     price: 'Price',
     tags: 'Tags',
     shipping_info: 'Shipping Info',
-    product_info: 'Product Information',
     category: 'Category',
     product_code: 'Product Code',
     back_to_products: 'Back to Products',
@@ -377,7 +374,6 @@ export const dictionary: Record<Language, Dictionary> = {
     price: 'Harga',
     tags: 'Tag',
     shipping_info: 'Info Pengiriman',
-    product_info: 'Informasi Produk',
     category: 'Kategori',
     product_code: 'Kode Produk',
     back_to_products: 'Kembali ke Produk',
@@ -490,7 +486,6 @@ export const dictionary: Record<Language, Dictionary> = {
     price: 'Presyo',
     tags: 'Mga Tag',
     shipping_info: 'Impormasyon sa Pagpapadala',
-    product_info: 'Impormasyon ng Produkto',
     category: 'Kategorya',
     product_code: 'Code ng Produkto',
     back_to_products: 'Bumalik sa Mga Produkto',
@@ -603,7 +598,6 @@ export const dictionary: Record<Language, Dictionary> = {
     price: 'តម្លៃ',
     tags: 'ស្លាក',
     shipping_info: 'ព័ត៌មានដឹកជញ្ជូន',
-    product_info: 'ព័ត៌មានផលិតផល',
     category: 'ប្រភេទ',
     product_code: 'កូដផលិតផល',
     back_to_products: 'ត្រលប់ទៅផលិតផល',
