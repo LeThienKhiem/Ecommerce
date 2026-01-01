@@ -42,7 +42,7 @@ export default function HomeContent({ featuredProducts, searchQuery }: HomeConte
         </h2>
         
         {featuredProducts.length > 0 ? (
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+          <div className="columns-2 md:columns-3 lg:columns-4 gap-4">
             {featuredProducts.map((product: Product, index: number) => (
               <ProductCard key={product.id || product.slug} product={product} index={index} />
             ))}

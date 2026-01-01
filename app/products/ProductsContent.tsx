@@ -86,7 +86,7 @@ export default function ProductsContent({ products, selectedGroup }: ProductsCon
 
       {/* Products Grid */}
       {products.length > 0 ? (
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+        <div className="columns-2 md:columns-3 lg:columns-4 gap-4">
           {products.map((product, index) => (
             <ProductCard key={product.id || product.slug} product={product} index={index} />
           ))}
