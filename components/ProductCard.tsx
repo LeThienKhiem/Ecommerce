@@ -90,34 +90,49 @@ export default function ProductCard({ product, index }: ProductCardProps) {
   const currentImage = images.length > 0 ? images[currentImageIndex] : null;
 
   return (
-    <div className="group" ref={cardRef}>
+    <div className="group break-inside-avoid mb-4 h-auto" ref={cardRef}>
       {/* Product Image */}
       <Link href={`/products/${localizedSlug}`}>
         <div
-          className="aspect-square bg-apple-gray-50 mb-4 overflow-hidden rounded-lg relative"
+          className="w-full mb-4 overflow-hidden rounded-lg relative"
           onMouseEnter={() => setIsHovered(true)}
           onMouseLeave={() => setIsHovered(false)}
         >
           {currentImage ? (
-            <div className="relative w-full h-full">
-              {images.map((image, idx) => (
-                <Image
-                  key={idx}
-                  src={image}
-                  alt={`${localizedName} - Image ${idx + 1}`}
-                  width={500}
-                  height={500}
-                  className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-500 ${
-                    idx === currentImageIndex
-                      ? "opacity-100"
-                      : "opacity-0"
-                  }`}
-                  unoptimized
-                />
-              ))}
+            <div className="relative w-full">
+              {/* First image in normal flow to establish container height for masonry */}
+              <Image
+                src={images[0]}
+                alt={`${localizedName} - Image 1`}
+                width={500}
+                height={500}
+                className={`w-full h-auto transition-opacity duration-500 ${
+                  currentImageIndex === 0 ? "opacity-100" : "opacity-0"
+                }`}
+                unoptimized
+              />
+              {/* Other images absolutely positioned for overlay effect */}
+              {images.slice(1).map((image, idx) => {
+                const actualIdx = idx + 1;
+                return (
+                  <Image
+                    key={actualIdx}
+                    src={image}
+                    alt={`${localizedName} - Image ${actualIdx + 1}`}
+                    width={500}
+                    height={500}
+                    className={`absolute top-0 left-0 w-full h-auto transition-opacity duration-500 ${
+                      actualIdx === currentImageIndex
+                        ? "opacity-100"
+                        : "opacity-0"
+                    }`}
+                    unoptimized
+                  />
+                );
+              })}
             </div>
           ) : (
-            <div className="w-full h-full bg-apple-gray-100"></div>
+            <div className="w-full h-64 bg-apple-gray-100"></div>
           )}
         </div>
       </Link>

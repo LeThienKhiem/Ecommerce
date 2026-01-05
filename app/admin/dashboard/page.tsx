@@ -248,7 +248,7 @@ export default function AdminDashboard() {
         tags: newProduct.tags ? newProduct.tags.split(",").map((tag) => tag.trim()).filter((tag) => tag.length > 0) : [],
         is_published: newProduct.is_published,
         is_featured: newProduct.is_featured,
-        translations: newProduct.translations || null,
+        // translations column doesn't exist in database, removed to prevent errors
       };
 
       // Handle product type logic
