@@ -73,3 +73,4 @@ export function getLocalizedProductSlug(product: Product, lang: Language): strin
   return getLocalizedContent(product, lang, "slug");
 }
 
+

@@ -418,6 +418,7 @@ export default function CheckoutPage() {
                                 width={64}
                                 height={64}
                                 className="w-full h-full object-cover"
+                                unoptimized
                             />
                         ) : (
                             <div className="w-full h-full flex items-center justify-center text-xs text-gray-400">No img</div>

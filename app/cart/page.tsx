@@ -103,6 +103,7 @@ export default function CartPage() {
                           width={96}
                           height={96}
                           className="w-full h-full object-cover"
+                          unoptimized
                         />
                       ) : (
                         <div className="w-full h-full bg-apple-gray-100"></div>

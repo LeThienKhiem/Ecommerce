@@ -112,6 +112,7 @@ export default function ProductCard({ product, index }: ProductCardProps) {
                       ? "opacity-100"
                       : "opacity-0"
                   }`}
+                  unoptimized
                 />
               ))}
             </div>

@@ -32,6 +32,7 @@ export default function ProductImageGallery({
             height={800}
             className="w-full h-full object-cover"
             priority
+            unoptimized
           />
         ) : (
           <div className="w-full h-full bg-apple-gray-100"></div>
@@ -65,6 +66,7 @@ export default function ProductImageGallery({
                 width={200}
                 height={200}
                 className="w-full h-full object-cover"
+                unoptimized
               />
             </button>
           )}
@@ -87,6 +89,7 @@ export default function ProductImageGallery({
                 width={200}
                 height={200}
                 className="w-full h-full object-cover"
+                unoptimized
               />
             </button>
           ))}
